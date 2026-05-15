@@ -44,89 +44,18 @@ export default function SignupPage() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 24,
-        background: "var(--color-surface)",
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      {/* Background blobs */}
-      <div
-        style={{
-          position: "absolute",
-          width: 500,
-          height: 500,
-          borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(52,168,83,0.12) 0%, transparent 70%)",
-          top: -200,
-          left: -100,
-          pointerEvents: "none",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          width: 400,
-          height: 400,
-          borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(26,115,232,0.08) 0%, transparent 70%)",
-          bottom: -150,
-          right: -100,
-          pointerEvents: "none",
-        }}
-      />
-
-      <div className="page-enter" style={{ width: "100%", maxWidth: 400, position: "relative", zIndex: 1 }}>
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, background: "var(--color-surface-elevated)" }}>
+      <div className="page-enter" style={{ width: "100%", maxWidth: 400 }}>
         {/* Logo */}
-        <div className="flex items-center justify-center gap-3" style={{ marginBottom: 32 }}>
-          <div
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: "var(--radius-md)",
-              background: "linear-gradient(135deg, #1a73e8, #4285f4)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              boxShadow: "0 4px 16px rgba(26, 115, 232, 0.35)",
-            }}
-          >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#fff"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M23 7l-7 5 7 5V7z" />
-              <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
-            </svg>
-          </div>
-          <span style={{ fontSize: 24, fontWeight: 600, color: "var(--color-text-primary)" }}>
-            Classroom
+        <div className="flex items-center justify-center" style={{ marginBottom: 32 }}>
+          <span style={{ fontSize: 15, fontWeight: 700, color: "var(--color-text-primary)", letterSpacing: "0.02em" }}>
+            GLORIOUS AMPLIFICATION
           </span>
         </div>
 
         {/* Card */}
-        <div className="glass-card" style={{ padding: 32 }}>
-          <h1
-            style={{
-              fontSize: 22,
-              fontWeight: 600,
-              textAlign: "center",
-              marginBottom: 8,
-              color: "var(--color-text-primary)",
-            }}
-          >
+        <div className="card" style={{ padding: 32 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 600, textAlign: "center", marginBottom: 4, color: "var(--color-text-primary)" }}>
             Create your account
           </h1>
           <p style={{ fontSize: 14, textAlign: "center", color: "var(--color-text-secondary)", marginBottom: 28 }}>
@@ -138,46 +67,18 @@ export default function SignupPage() {
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div>
               <label className="field-label">Full Name</label>
-              <input
-                id="signup-name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                placeholder="John Doe"
-                className="input-field"
-              />
+              <input id="signup-name" type="text" value={name} onChange={(e) => setName(e.target.value)} required placeholder="John Doe" className="input-field" />
             </div>
-
             <div>
               <label className="field-label">Email</label>
-              <input
-                id="signup-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                placeholder="you@example.com"
-                className="input-field"
-              />
+              <input id="signup-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@example.com" className="input-field" />
             </div>
-
             <div>
               <label className="field-label">Password</label>
-              <input
-                id="signup-password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="Min 6 characters"
-                className="input-field"
-              />
+              <input id="signup-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="Min 6 characters" className="input-field" />
             </div>
-
             <div>
               <label className="field-label">Role</label>
-              {/* Role toggle buttons */}
               <div className="flex gap-2">
                 <button
                   type="button"
@@ -187,7 +88,7 @@ export default function SignupPage() {
                     padding: "10px 16px",
                     borderRadius: "var(--radius-md)",
                     border: `1px solid ${role === "student" ? "var(--color-primary)" : "var(--color-border)"}`,
-                    background: role === "student" ? "rgba(26, 115, 232, 0.12)" : "var(--color-surface-elevated)",
+                    background: role === "student" ? "var(--color-primary-light)" : "var(--color-surface)",
                     color: role === "student" ? "var(--color-primary)" : "var(--color-text-secondary)",
                     fontSize: 14,
                     fontWeight: 500,
@@ -199,18 +100,8 @@ export default function SignupPage() {
                     gap: 8,
                   }}
                 >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
-                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M4 19.5A2.5 2.5 0 016.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
                   </svg>
                   Student
                 </button>
@@ -222,7 +113,7 @@ export default function SignupPage() {
                     padding: "10px 16px",
                     borderRadius: "var(--radius-md)",
                     border: `1px solid ${role === "teacher" ? "var(--color-primary)" : "var(--color-border)"}`,
-                    background: role === "teacher" ? "rgba(26, 115, 232, 0.12)" : "var(--color-surface-elevated)",
+                    background: role === "teacher" ? "var(--color-primary-light)" : "var(--color-surface)",
                     color: role === "teacher" ? "var(--color-primary)" : "var(--color-text-secondary)",
                     fontSize: 14,
                     fontWeight: 500,
@@ -234,20 +125,8 @@ export default function SignupPage() {
                     gap: 8,
                   }}
                 >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M8 14s1.5 2 4 2 4-2 4-2" />
-                    <line x1="9" y1="9" x2="9.01" y2="9" />
-                    <line x1="15" y1="9" x2="15.01" y2="9" />
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" />
                   </svg>
                   Teacher
                 </button>
@@ -269,9 +148,7 @@ export default function SignupPage() {
 
         <p style={{ fontSize: 14, textAlign: "center", marginTop: 20, color: "var(--color-text-secondary)" }}>
           Already have an account?{" "}
-          <Link href="/login" style={{ color: "var(--color-primary)", fontWeight: 500 }}>
-            Sign in
-          </Link>
+          <Link href="/login" style={{ color: "var(--color-primary)", fontWeight: 500 }}>Sign in</Link>
         </p>
       </div>
     </div>

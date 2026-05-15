@@ -38,93 +38,22 @@ export default function LoginPage() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 24,
-        background: "var(--color-surface)",
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      {/* Background blobs */}
-      <div
-        style={{
-          position: "absolute",
-          width: 500,
-          height: 500,
-          borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(26,115,232,0.12) 0%, transparent 70%)",
-          top: -200,
-          right: -100,
-          pointerEvents: "none",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          width: 400,
-          height: 400,
-          borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(52,168,83,0.08) 0%, transparent 70%)",
-          bottom: -150,
-          left: -100,
-          pointerEvents: "none",
-        }}
-      />
-
-      <div className="page-enter" style={{ width: "100%", maxWidth: 400, position: "relative", zIndex: 1 }}>
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, background: "var(--color-surface-elevated)" }}>
+      <div className="page-enter" style={{ width: "100%", maxWidth: 400 }}>
         {/* Logo */}
-        <div className="flex items-center justify-center gap-3" style={{ marginBottom: 32 }}>
-          <div
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: "var(--radius-md)",
-              background: "linear-gradient(135deg, #1a73e8, #4285f4)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              boxShadow: "0 4px 16px rgba(26, 115, 232, 0.35)",
-            }}
-          >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#fff"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M23 7l-7 5 7 5V7z" />
-              <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
-            </svg>
-          </div>
-          <span style={{ fontSize: 24, fontWeight: 600, color: "var(--color-text-primary)" }}>
-            Classroom
+        <div className="flex items-center justify-center" style={{ marginBottom: 32 }}>
+          <span style={{ fontSize: 15, fontWeight: 700, color: "var(--color-text-primary)", letterSpacing: "0.02em" }}>
+            GLORIOUS AMPLIFICATION
           </span>
         </div>
 
         {/* Card */}
-        <div className="glass-card" style={{ padding: 32 }}>
-          <h1
-            style={{
-              fontSize: 22,
-              fontWeight: 600,
-              textAlign: "center",
-              marginBottom: 8,
-              color: "var(--color-text-primary)",
-            }}
-          >
+        <div className="card" style={{ padding: 32 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 600, textAlign: "center", marginBottom: 4, color: "var(--color-text-primary)" }}>
             Welcome back
           </h1>
           <p style={{ fontSize: 14, textAlign: "center", color: "var(--color-text-secondary)", marginBottom: 28 }}>
-            Sign in to continue to your classroom
+            Sign in to your account
           </p>
 
           {error && <div className="error-alert">{error}</div>}
@@ -132,30 +61,12 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div>
               <label className="field-label">Email</label>
-              <input
-                id="login-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                placeholder="you@example.com"
-                className="input-field"
-              />
+              <input id="login-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@example.com" className="input-field" />
             </div>
-
             <div>
               <label className="field-label">Password</label>
-              <input
-                id="login-password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="••••••••"
-                className="input-field"
-              />
+              <input id="login-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="Enter your password" className="input-field" />
             </div>
-
             <button type="submit" disabled={loading} className="btn-primary" style={{ width: "100%", marginTop: 4, padding: "12px 24px" }}>
               {loading ? (
                 <>
@@ -171,9 +82,7 @@ export default function LoginPage() {
 
         <p style={{ fontSize: 14, textAlign: "center", marginTop: 20, color: "var(--color-text-secondary)" }}>
           Don&apos;t have an account?{" "}
-          <Link href="/signup" style={{ color: "var(--color-primary)", fontWeight: 500 }}>
-            Create one
-          </Link>
+          <Link href="/signup" style={{ color: "var(--color-primary)", fontWeight: 500 }}>Create one</Link>
         </p>
       </div>
     </div>
