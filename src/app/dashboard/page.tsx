@@ -73,7 +73,7 @@ export default function DashboardPage() {
       <Navbar />
       <main style={{ maxWidth: 900, margin: "0 auto", padding: "32px 24px" }}>
         {/* Profile header */}
-        <div className="page-enter" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32, flexWrap: "wrap", gap: 16 }}>
+        <div className="page-enter dash-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32, flexWrap: "wrap", gap: 16 }}>
           <div className="flex items-center gap-4">
             <div style={{ width: 52, height: 52, borderRadius: "var(--radius-full)", background: "linear-gradient(135deg, #2563eb, #7c3aed)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 700, color: "#fff" }}>
               {userData.name.charAt(0).toUpperCase()}
@@ -88,7 +88,7 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 dash-actions">
             {isTeacher ? (
               <button className="btn-primary" onClick={() => setShowCreateModal(true)}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -108,7 +108,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Stats */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))", gap: 12, marginBottom: 28 }}>
+        <div className="stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))", gap: 12, marginBottom: 28 }}>
           {stats.map(s => (
             <div key={s.label} className="card" style={{ padding: "18px 16px", display: "flex", alignItems: "center", gap: 14 }}>
               <div style={{ width: 42, height: 42, borderRadius: "var(--radius-md)", background: s.bg, display: "flex", alignItems: "center", justifyContent: "center", color: s.color, flexShrink: 0 }}>{s.icon}</div>
@@ -132,7 +132,7 @@ export default function DashboardPage() {
         )}
 
         {/* Tabs */}
-        <div className="flex items-center gap-1" style={{ marginBottom: 16, borderBottom: "1px solid var(--color-border)", paddingBottom: 0 }}>
+        <div className="flex items-center gap-1 tabs-row" style={{ marginBottom: 16, borderBottom: "1px solid var(--color-border)", paddingBottom: 0 }}>
           {(["all","upcoming","completed"] as const).map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)} style={{
               padding: "10px 18px", fontSize: 13, fontWeight: 500, cursor: "pointer", border: "none", background: "transparent",
