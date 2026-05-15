@@ -10,9 +10,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Classroom — Online Meeting & Learning Platform",
+  title: "Glorious Amplification — Online Learning Platform",
   description:
-    "A Google Meet-style classroom platform with video meetings, attendance tracking, recordings, and role-based management.",
+    "Online classroom platform with video meetings, attendance tracking, recordings, and batch management by Glorious Amplification.",
 };
 
 export default function RootLayout({

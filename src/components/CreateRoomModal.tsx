@@ -22,6 +22,7 @@ export default function CreateRoomModal({ isOpen, onClose, onRoomCreated }: Crea
   const { userData } = useAuth();
   const [roomName, setRoomName] = useState("");
   const [subject, setSubject] = useState("");
+  const [scheduledAt, setScheduledAt] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -51,11 +52,13 @@ export default function CreateRoomModal({ isOpen, onClose, onRoomCreated }: Crea
         teacherId: userData.uid,
         roomCode,
         createdAt: new Date().toISOString(),
+        scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : null,
         participants: [],
         isActive: false,
       });
 
       setRoomName("");
+      setScheduledAt("");
       setSubject("");
       onRoomCreated();
       onClose();
@@ -130,6 +133,16 @@ export default function CreateRoomModal({ isOpen, onClose, onRoomCreated }: Crea
               onChange={(e) => setSubject(e.target.value)}
               required
               placeholder="e.g. Mathematics"
+              className="input-field"
+            />
+          </div>
+
+          <div>
+            <label className="field-label">Schedule (optional)</label>
+            <input
+              type="datetime-local"
+              value={scheduledAt}
+              onChange={(e) => setScheduledAt(e.target.value)}
               className="input-field"
             />
           </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { doc, getDoc, collection, query, where, getDocs, orderBy } from "firebase/firestore";
+import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/firebase/config";
 import { useAuth } from "@/context/AuthContext";
 import { useProtectedRoute } from "@/hooks/useProtectedRoute";
@@ -57,14 +57,14 @@ export default function AttendancePage() {
     try {
       const q = query(
         collection(db, "attendance"),
-        where("roomId", "==", roomId),
-        orderBy("joinTime", "desc")
+        where("roomId", "==", roomId)
       );
       const snapshot = await getDocs(q);
       const fetchedRecords: AttendanceRecord[] = snapshot.docs.map((d) => ({
         id: d.id,
         ...d.data(),
       })) as AttendanceRecord[];
+      fetchedRecords.sort((a, b) => new Date(b.joinTime).getTime() - new Date(a.joinTime).getTime());
       setRecords(fetchedRecords);
     } catch (err) {
       console.error("Failed to fetch attendance:", err);
@@ -409,7 +409,7 @@ export default function AttendancePage() {
                 display: "grid",
                 gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr",
                 padding: "14px 20px",
-                background: "rgba(0, 0, 0, 0.15)",
+                background: "var(--color-surface-elevated)",
                 borderBottom: "1px solid var(--color-border)",
                 fontSize: 12,
                 fontWeight: 600,
@@ -443,7 +443,7 @@ export default function AttendancePage() {
                   transition: "background var(--transition-fast)",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.02)";
+                  e.currentTarget.style.background = "var(--color-surface-hover)";
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = "transparent";
