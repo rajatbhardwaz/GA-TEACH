@@ -36,7 +36,7 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
   useEffect(() => {
     if (!userData) return;
 
-    const domain = process.env.NEXT_PUBLIC_JITSI_DOMAIN || "meet.jit.si";
+    const domain = process.env.NEXT_PUBLIC_JITSI_DOMAIN || "8x8.vc";
     const scriptSrc = `https://${domain}/external_api.js`;
 
     // Check if script is already loaded
@@ -73,16 +73,11 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
     // If already initialized, don't re-initialize
     if (apiRef.current) return;
 
-    const domain = process.env.NEXT_PUBLIC_JITSI_DOMAIN || "meet.jit.si";
+    const domain = process.env.NEXT_PUBLIC_JITSI_DOMAIN || "8x8.vc";
 
-    // Configure Jitsi meeting options
-    // Key: the public meet.jit.si server enforces moderator auth server-side.
-    // To avoid the "waiting for moderator" screen, we:
-    //   1. Use a unique room name per session so the first joiner is auto-moderator
-    //   2. Disable all lobby/pre-join/auth UI
-    //   3. Set all participants as guests who join immediately
-    // Use meetingSession in room name so each session is a fresh Jitsi room
-    // The first person to join a fresh room auto-becomes moderator (no login!)
+    // Use meetingSession in room name so each session is a fresh Jitsi room.
+    // On anonymous-friendly servers (like 8x8.vc), the first person to join
+    // a fresh room auto-becomes moderator — no login required!
     const jitsiRoomName = meetingSession
       ? `classroom_${roomId}_${meetingSession}`
       : `classroom_${roomId}`;
@@ -115,8 +110,9 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
         authenticationUrl: null,
         enableFeaturesBasedOnToken: false,
         
-        // --- Guests should be allowed without waiting ---
+        // --- Guests join immediately without waiting for a moderator ---
         enableUserRolesBasedOnToken: false,
+        moderatedRoomServiceUrl: null,
         
         // --- Audio/video defaults ---
         startWithAudioMuted: !isTeacher,
@@ -194,9 +190,14 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
       updateDoc(doc(db, "rooms", roomId), { isActive: true }).catch(console.error);
     }
 
-    // Auto-dismiss any password/lobby dialogs that might appear
+    // Auto-dismiss any password/lobby/auth dialogs that might appear
     api.addEventListener("passwordRequired", () => {
       api.executeCommand("password", "");
+    });
+
+    // Auto-dismiss any authentication prompts
+    api.addEventListener("authenticationRequired", () => {
+      // Silently ignore — we don't want users to see login dialogs
     });
 
     // Listen for conference joined to confirm successful connection
