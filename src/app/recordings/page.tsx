@@ -53,8 +53,20 @@ export default function RecordingsPage() {
 
   useEffect(() => { if (userData) fetchRecordings(); }, [userData, fetchRecordings]);
 
-  if (authLoading || !userData) {
+  if (authLoading) {
     return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}><div className="spinner" /></div>);
+  }
+
+  if (!userData) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16, padding: 24, textAlign: "center" }}>
+        <p style={{ color: "var(--color-text-secondary)", fontSize: 15 }}>Unable to load your profile.</p>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button className="btn-secondary" onClick={() => window.location.reload()} style={{ padding: "8px 20px", fontSize: 13 }}>Retry</button>
+          <a href="/login"><button className="btn-primary" style={{ padding: "8px 20px", fontSize: 13 }}>Go to Login</button></a>
+        </div>
+      </div>
+    );
   }
 
   return (

@@ -44,8 +44,23 @@ export default function DashboardPage() {
 
   useEffect(() => { if (userData) fetchRooms(); }, [userData, fetchRooms]);
 
-  if (authLoading || !userData) {
+  if (authLoading) {
     return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}><div className="spinner" /></div>);
+  }
+
+  if (!userData) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16, padding: 24, textAlign: "center" }}>
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <p style={{ color: "var(--color-text-secondary)", fontSize: 15, maxWidth: 360 }}>
+          Unable to load your profile. This can happen due to a slow connection.
+        </p>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button className="btn-secondary" onClick={() => window.location.reload()} style={{ padding: "8px 20px", fontSize: 13 }}>Retry</button>
+          <a href="/login"><button className="btn-primary" style={{ padding: "8px 20px", fontSize: 13 }}>Go to Login</button></a>
+        </div>
+      </div>
+    );
   }
 
   const isTeacher = userData.role === "teacher";

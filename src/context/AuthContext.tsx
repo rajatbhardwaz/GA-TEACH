@@ -36,10 +36,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch user profile from Firestore with error handling
+  // Fetch user profile from Firestore with error handling and timeout
   const fetchUserData = useCallback(async (firebaseUser: User) => {
     try {
-      const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
+      // Race the Firestore fetch against a 10s timeout to avoid infinite hangs
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Firestore fetch timed out")), 10000)
+      );
+      const userDoc = await Promise.race([
+        getDoc(doc(db, "users", firebaseUser.uid)),
+        timeoutPromise,
+      ]);
       if (userDoc.exists()) {
         setUserData(userDoc.data() as UserData);
       } else {
@@ -55,19 +62,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Listen for auth state changes and fetch user data from Firestore
   useEffect(() => {
-    // Safety timeout: if Firebase takes too long, stop blocking the UI
+    // Safety timeout: if the ENTIRE auth+data flow takes too long, unblock UI.
+    // Do NOT clear this when auth resolves — only clear after everything finishes.
+    // This prevents infinite spinner if Firestore hangs after auth succeeds.
     const timeout = setTimeout(() => {
+      console.warn("Auth safety timeout fired — unblocking UI");
       setLoading(false);
-    }, 5000);
+    }, 8000);
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      clearTimeout(timeout);
       setUser(firebaseUser);
       if (firebaseUser) {
         await fetchUserData(firebaseUser);
       } else {
         setUserData(null);
       }
+      clearTimeout(timeout); // Clear only AFTER everything completes
       setLoading(false);
     });
 

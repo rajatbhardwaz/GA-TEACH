@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { doc, updateDoc, addDoc, collection } from "firebase/firestore";
-import { db } from "@/firebase/config";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { db, storage } from "@/firebase/config";
 import { useAuth } from "@/context/AuthContext";
 
 interface JitsiMeetingProps {
@@ -32,6 +33,17 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
   const { userData } = useAuth();
   const [isLoaded, setIsLoaded] = useState(false);
   const joinTimeRef = useRef<string>("");
+
+  // --- Screen Recording State ---
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStatus, setUploadStatus] = useState<"idle" | "uploading" | "done" | "error">("idle");
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
+  const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
     if (!userData) return;
@@ -314,8 +326,219 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
   };
 
   const endMeeting = () => {
+    // Stop recording if active before ending meeting
+    if (isRecording) {
+      stopRecording();
+    }
     apiRef.current?.executeCommand("hangup");
   };
+
+  // --- Screen Recording ---
+  const formatRecordingTime = (seconds: number) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  };
+
+  const startRecording = useCallback(async () => {
+    try {
+      // Request screen capture with audio
+      const displayStream = await navigator.mediaDevices.getDisplayMedia({
+        video: { displaySurface: "browser" } as MediaTrackConstraints,
+        audio: true,
+      });
+
+      // Also try to capture microphone audio for teacher's voice
+      let combinedStream = displayStream;
+      try {
+        const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const audioContext = new AudioContext();
+        const destination = audioContext.createMediaStreamDestination();
+
+        // Mix display audio + mic audio
+        displayStream.getAudioTracks().forEach((track) => {
+          audioContext.createMediaStreamSource(new MediaStream([track])).connect(destination);
+        });
+        micStream.getAudioTracks().forEach((track) => {
+          audioContext.createMediaStreamSource(new MediaStream([track])).connect(destination);
+        });
+
+        // Combine video from display + mixed audio
+        combinedStream = new MediaStream([
+          ...displayStream.getVideoTracks(),
+          ...destination.stream.getAudioTracks(),
+        ]);
+
+        // Cleanup mic stream when display stream ends
+        displayStream.getVideoTracks()[0].addEventListener("ended", () => {
+          micStream.getTracks().forEach((t) => t.stop());
+          audioContext.close();
+        });
+      } catch {
+        // Mic access denied — record screen audio only, that's fine
+        console.log("Mic access denied, recording screen audio only");
+      }
+
+      streamRef.current = combinedStream;
+      recordedChunksRef.current = [];
+
+      const mediaRecorder = new MediaRecorder(combinedStream, {
+        mimeType: MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")
+          ? "video/webm;codecs=vp9,opus"
+          : "video/webm",
+      });
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          recordedChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        saveRecording();
+      };
+
+      // When user stops sharing via browser's native "Stop sharing" button
+      combinedStream.getVideoTracks()[0].addEventListener("ended", () => {
+        if (mediaRecorderRef.current?.state === "recording") {
+          stopRecording();
+        }
+      });
+
+      mediaRecorder.start(1000); // Collect data every second
+      mediaRecorderRef.current = mediaRecorder;
+      setIsRecording(true);
+      setRecordingTime(0);
+
+      // Start timer
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingTime((prev) => prev + 1);
+      }, 1000);
+    } catch (err) {
+      console.error("Failed to start recording:", err);
+      // User cancelled the screen picker dialog
+    }
+  }, []);
+
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+      mediaRecorderRef.current.stop();
+    }
+
+    // Stop all tracks
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+
+    // Clear timer
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
+
+    setIsRecording(false);
+  }, []);
+
+  const saveRecording = useCallback(async () => {
+    if (recordedChunksRef.current.length === 0) return;
+
+    const blob = new Blob(recordedChunksRef.current, { type: "video/webm" });
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const fileName = `${roomName.replace(/\s+/g, "_")}_${timestamp}.webm`;
+    const filePath = `recordings/${roomId}/${fileName}`;
+
+    const recordingTitle = `Class Recording — ${new Date().toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })}`;
+
+    setIsUploading(true);
+    setUploadProgress(0);
+    setUploadStatus("uploading");
+
+    try {
+      // Upload to Firebase Storage
+      const storageRef = ref(storage, filePath);
+      const uploadTask = uploadBytesResumable(storageRef, blob, {
+        contentType: "video/webm",
+      });
+
+      // Track upload progress
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+          const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+          setUploadProgress(progress);
+        },
+        (error) => {
+          console.error("Upload failed:", error);
+          setUploadStatus("error");
+          // Fallback: download locally if upload fails
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(url), 10000);
+          setTimeout(() => {
+            setIsUploading(false);
+            setUploadStatus("idle");
+          }, 3000);
+        },
+        async () => {
+          // Upload complete — get the download URL
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+
+          // Save recording to Firestore with the download link
+          await addDoc(collection(db, "recordings"), {
+            roomId,
+            title: recordingTitle,
+            link: downloadURL,
+            uploadedBy: userData?.name || "Teacher",
+            uploadedById: userData?.uid || "",
+            duration: formatRecordingTime(recordingTime),
+            createdAt: new Date().toISOString(),
+            isLocalRecording: false,
+            storagePath: filePath,
+          });
+
+          setUploadStatus("done");
+          setTimeout(() => {
+            setIsUploading(false);
+            setUploadStatus("idle");
+          }, 3000);
+        }
+      );
+    } catch (err) {
+      console.error("Failed to save recording:", err);
+      setUploadStatus("error");
+      setTimeout(() => {
+        setIsUploading(false);
+        setUploadStatus("idle");
+      }, 3000);
+    }
+
+    recordedChunksRef.current = [];
+  }, [roomId, roomName, recordingTime, userData?.name, userData?.uid]);
+
+  // Cleanup recording on unmount
+  useEffect(() => {
+    return () => {
+      if (mediaRecorderRef.current?.state === "recording") {
+        mediaRecorderRef.current.stop();
+      }
+      streamRef.current?.getTracks().forEach((track) => track.stop());
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="flex flex-col" style={{ height: "100%", background: "#000" }}>
@@ -335,8 +558,63 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
           <div className="flex items-center gap-2">
             <span className="badge badge-live">Live</span>
             <span style={{ fontSize: 14, color: "var(--color-text-secondary)" }}>{roomName}</span>
+            {isRecording && (
+              <div
+                className="flex items-center gap-2"
+                style={{
+                  padding: "4px 12px",
+                  background: "rgba(234, 67, 53, 0.12)",
+                  borderRadius: "var(--radius-full)",
+                  border: "1px solid rgba(234, 67, 53, 0.3)",
+                }}
+              >
+                <div
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    background: "#ea4335",
+                    animation: "pulse 1.5s ease-in-out infinite",
+                  }}
+                />
+                <span style={{ fontSize: 12, fontWeight: 600, color: "#ea4335", fontFamily: "monospace" }}>
+                  REC {formatRecordingTime(recordingTime)}
+                </span>
+              </div>
+            )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2" style={{ flexWrap: "wrap" }}>
+            {/* Record / Stop Recording button */}
+            <button
+              onClick={isRecording ? stopRecording : startRecording}
+              style={{
+                padding: "8px 16px",
+                fontSize: 13,
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                borderRadius: "var(--radius-md)",
+                border: isRecording ? "1px solid rgba(234, 67, 53, 0.4)" : "1px solid var(--color-border)",
+                background: isRecording ? "rgba(234, 67, 53, 0.12)" : "var(--color-surface-elevated)",
+                color: isRecording ? "#ea4335" : "var(--color-text-primary)",
+                cursor: "pointer",
+                fontWeight: 500,
+                transition: "all 0.2s ease",
+              }}
+            >
+              {isRecording ? (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="#ea4335" stroke="none">
+                  <rect x="6" y="6" width="12" height="12" rx="2" />
+                </svg>
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <circle cx="12" cy="12" r="4" fill="#ea4335" stroke="none" />
+                </svg>
+              )}
+              {isRecording ? "Stop Recording" : "Record Class"}
+            </button>
+
             <button onClick={muteAll} className="btn-secondary" style={{ padding: "8px 16px", fontSize: 13 }}>
               <svg
                 width="16"
@@ -401,6 +679,74 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
         >
           <div className="spinner" style={{ width: 48, height: 48 }} />
           <p style={{ color: "var(--color-text-secondary)", fontSize: 14 }}>Connecting to meeting...</p>
+        </div>
+      )}
+
+      {/* Upload progress overlay */}
+      {isUploading && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: 24,
+            right: 24,
+            zIndex: 1000,
+            background: "var(--color-surface-elevated)",
+            border: "1px solid var(--color-border)",
+            borderRadius: "var(--radius-lg)",
+            padding: "20px 24px",
+            minWidth: 320,
+            boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+          }}
+        >
+          <div className="flex items-center gap-3" style={{ marginBottom: 12 }}>
+            {uploadStatus === "uploading" && (
+              <div className="spinner" style={{ width: 20, height: 20, borderWidth: 2 }} />
+            )}
+            {uploadStatus === "done" && (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#34a853" strokeWidth="2.5">
+                <polyline points="20,6 9,17 4,12" />
+              </svg>
+            )}
+            {uploadStatus === "error" && (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ea4335" strokeWidth="2.5">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="15" y1="9" x2="9" y2="15" />
+                <line x1="9" y1="9" x2="15" y2="15" />
+              </svg>
+            )}
+            <div>
+              <p style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text-primary)" }}>
+                {uploadStatus === "uploading" && "Uploading recording..."}
+                {uploadStatus === "done" && "Recording saved!"}
+                {uploadStatus === "error" && "Upload failed — downloaded locally"}
+              </p>
+              <p style={{ fontSize: 12, color: "var(--color-text-muted)", marginTop: 2 }}>
+                {uploadStatus === "uploading" && `${uploadProgress}% complete`}
+                {uploadStatus === "done" && "Available in class recordings"}
+                {uploadStatus === "error" && "Check your downloads folder"}
+              </p>
+            </div>
+          </div>
+          {uploadStatus === "uploading" && (
+            <div
+              style={{
+                height: 4,
+                background: "var(--color-border)",
+                borderRadius: 2,
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  height: "100%",
+                  width: `${uploadProgress}%`,
+                  background: "linear-gradient(90deg, #1a73e8, #4285f4)",
+                  borderRadius: 2,
+                  transition: "width 0.3s ease",
+                }}
+              />
+            </div>
+          )}
         </div>
       )}
     </div>
