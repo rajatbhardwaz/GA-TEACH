@@ -36,12 +36,12 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
   useEffect(() => {
     if (!userData) return;
 
-    const domain = process.env.NEXT_PUBLIC_JITSI_DOMAIN || "8x8.vc";
+    const domain = "8x8.vc";
     const scriptSrc = `https://${domain}/external_api.js`;
 
     // Check if script is already loaded
     if (window.JitsiMeetExternalAPI) {
-      initJitsi();
+      startMeeting();
       return;
     }
 
@@ -49,7 +49,7 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
     const script = document.createElement("script");
     script.src = scriptSrc;
     script.async = true;
-    script.onload = () => initJitsi();
+    script.onload = () => startMeeting();
     document.head.appendChild(script);
 
     return () => {
@@ -67,26 +67,67 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userData]);
 
-  const initJitsi = () => {
+  // Fetch a JWT from our server-side API, then init Jitsi with it
+  const startMeeting = async () => {
     if (!jitsiContainerRef.current || !userData) return;
-
-    // If already initialized, don't re-initialize
     if (apiRef.current) return;
 
-    const domain = process.env.NEXT_PUBLIC_JITSI_DOMAIN || "8x8.vc";
-
-    // Use meetingSession in room name so each session is a fresh Jitsi room.
-    // On anonymous-friendly servers (like 8x8.vc), the first person to join
-    // a fresh room auto-becomes moderator — no login required!
-    const jitsiRoomName = meetingSession
+    // Build the room name: on JaaS, room names are prefixed with the appId
+    const appId = process.env.NEXT_PUBLIC_JAAS_APP_ID;
+    const jitsiRoomSuffix = meetingSession
       ? `classroom_${roomId}_${meetingSession}`
       : `classroom_${roomId}`;
+
+    // If JaaS is configured, fetch a JWT token from our API route
+    let jwtToken: string | null = null;
+    let jitsiRoomName = jitsiRoomSuffix;
+    let domain = "8x8.vc";
+
+    if (appId) {
+      // JaaS mode: use JWT for authentication (no login prompt!)
+      domain = "8x8.vc";
+      jitsiRoomName = `${appId}/${jitsiRoomSuffix}`;
+
+      try {
+        const res = await fetch("/api/jaas-token", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            roomName: jitsiRoomSuffix,
+            user: {
+              id: userData.uid,
+              name: userData.name,
+              email: userData.email,
+              isModerator: isTeacher,
+            },
+          }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          jwtToken = data.token;
+        } else {
+          console.error("Failed to fetch JaaS token, falling back to anonymous mode");
+        }
+      } catch (err) {
+        console.error("Error fetching JaaS token:", err);
+      }
+    }
+
+    initJitsi(domain, jitsiRoomName, jwtToken);
+  };
+
+  const initJitsi = (domain: string, jitsiRoomName: string, jwtToken: string | null) => {
+    if (!jitsiContainerRef.current || !userData) return;
+    if (apiRef.current) return;
 
     const options: Record<string, unknown> = {
       roomName: jitsiRoomName,
       parentNode: jitsiContainerRef.current,
       width: "100%",
       height: "100%",
+      // Pass JWT if available — this auto-authenticates the user, no login!
+      ...(jwtToken ? { jwt: jwtToken } : {}),
       userInfo: {
         displayName: userData.name,
         email: userData.email,
@@ -108,42 +149,42 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
         hideLoginButton: true,
         tokenAuthUrl: null,
         authenticationUrl: null,
-        enableFeaturesBasedOnToken: false,
-        
+        enableFeaturesBasedOnToken: !!jwtToken,
+
         // --- Guests join immediately without waiting for a moderator ---
-        enableUserRolesBasedOnToken: false,
+        enableUserRolesBasedOnToken: !!jwtToken,
         moderatedRoomServiceUrl: null,
-        
+
         // --- Audio/video defaults ---
         startWithAudioMuted: !isTeacher,
         startWithVideoMuted: false,
-        
+
         // --- Disable moderation features that trigger login ---
         disableModeratorIndicator: !isTeacher,
         disableRemoteMute: !isTeacher,
         remoteVideoMenu: { disableKick: !isTeacher, disableGrantModerator: !isTeacher },
         disableReactions: false,
-        
+
         // --- Disable notifications that clutter the UI ---
         notifications: [],
         disableJoinLeaveSounds: false,
-        
+
         // --- Security: disable lobby ---
         security: { lobbyModeEnabled: false },
-        
+
         // --- Recording ---
         disableRecordAudioNotification: true,
-        
+
         // --- Make it feel smooth ---
         disableDeepLinking: true,
         disableThirdPartyRequests: true,
         disableInviteFunctions: true,
         doNotStoreRoom: true,
         enableNoisyMicDetection: false,
-        
+
         // --- P2P for better performance in small rooms ---
         p2p: { enabled: true },
-        
+
         // --- Subject (room title shown in Jitsi UI) ---
         subject: roomName,
       },
@@ -197,7 +238,7 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
 
     // Auto-dismiss any authentication prompts
     api.addEventListener("authenticationRequired", () => {
-      // Silently ignore — we don't want users to see login dialogs
+      // Silently ignore — JWT should prevent this, but just in case
     });
 
     // Listen for conference joined to confirm successful connection
