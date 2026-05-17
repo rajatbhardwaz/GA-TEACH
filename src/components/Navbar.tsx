@@ -61,7 +61,7 @@ export default function Navbar() {
                 <>
                   <div className="profile-menu" ref={profileRef} style={{ display: "flex" }}>
                     <button onClick={() => setProfileOpen(!profileOpen)} className="hidden sm:flex" style={{ alignItems: "center", gap: 8, padding: "5px 10px", borderRadius: "var(--radius-md)", border: "1px solid var(--border)", background: profileOpen ? "var(--bg-hover)" : "transparent", cursor: "pointer", transition: "all var(--transition-fast)" }}>
-                      <div style={{ width: 28, height: 28, borderRadius: "var(--radius-full)", background: "linear-gradient(135deg, var(--blue), #7c3aed)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 600, color: "#fff" }}>
+                      <div style={{ width: 28, height: 28, borderRadius: "var(--radius-full)", background: userData.role === "admin" ? "linear-gradient(135deg, #ef4444, #f97316)" : "linear-gradient(135deg, var(--blue), #7c3aed)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 600, color: "#fff" }}>
                         {userData.name.charAt(0).toUpperCase()}
                       </div>
                       <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-primary)", maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{userData.name}</span>
@@ -73,7 +73,7 @@ export default function Navbar() {
                         <div style={{ padding: "12px 14px", borderBottom: "1px solid var(--border)" }}>
                           <p style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>{userData.name}</p>
                           <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>{userData.email}</p>
-                          <span className={`badge ${userData.role === "teacher" ? "badge-teacher" : "badge-student"}`} style={{ marginTop: 8 }}>{userData.role === "teacher" ? "Faculty" : "Student"}</span>
+                          <span className={`badge ${userData.role === "admin" ? "badge-teacher" : userData.role === "teacher" ? "badge-teacher" : "badge-student"}`} style={{ marginTop: 8 }}>{userData.role === "admin" ? "Admin" : userData.role === "teacher" ? "Faculty" : "Student"}</span>
                         </div>
                         <div style={{ padding: "4px 0" }}>
                           <button className="profile-dropdown-item" onClick={() => { setProfileOpen(false); router.push("/dashboard"); }}>

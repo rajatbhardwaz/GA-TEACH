@@ -45,7 +45,7 @@ export default function MeetingPage() {
 
   useEffect(() => { fetchRoom(); }, [fetchRoom]);
 
-  const isTeacher = userData?.role === "teacher" && userData?.uid === room?.teacherId;
+  const isTeacher = (userData?.role === "teacher" || userData?.role === "admin") && userData?.uid === room?.teacherId;
 
   if (authLoading || loadingRoom) {
     return (<div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "var(--bg-base)", gap: 16 }}><div className="spinner" style={{ width: 48, height: 48 }} /><p style={{ color: "var(--text-secondary)", fontSize: 14 }}>Preparing your classroom...</p></div>);

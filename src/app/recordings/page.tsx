@@ -38,7 +38,7 @@ export default function RecordingsPage() {
     if (!userData) return;
     setLoading(true);
     try {
-      const roomQ = userData.role === "teacher"
+      const roomQ = (userData.role === "teacher" || userData.role === "admin")
         ? query(collection(db, "rooms"), where("teacherId", "==", userData.uid))
         : query(collection(db, "rooms"), where("participants", "array-contains", userData.uid));
       const roomSnap = await getDocs(roomQ);
@@ -84,7 +84,7 @@ export default function RecordingsPage() {
   if (authLoading) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg-base)" }}><div className="spinner" /></div>);
   if (!userData) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16, padding: 24, background: "var(--bg-base)" }}><p style={{ color: "var(--text-secondary)" }}>Unable to load profile.</p><div style={{ display: "flex", gap: 10 }}><button className="btn-secondary" onClick={() => window.location.reload()}>Retry</button><a href="/login"><button className="btn-primary">Login</button></a></div></div>);
 
-  const isTeacher = userData.role === "teacher";
+  const isTeacher = userData.role === "teacher" || userData.role === "admin";
 
   return (
     <DashboardLayout title="Lecture Recordings">

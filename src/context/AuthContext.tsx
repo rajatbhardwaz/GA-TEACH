@@ -15,12 +15,23 @@ import {
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { auth, db } from "@/firebase/config";
 
+// Admin email — the single admin account on the platform
+// Configurable via NEXT_PUBLIC_ADMIN_EMAIL env variable
+const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "rajat@gloriousamplification.com";
+
+// Approval statuses for teacher accounts
+export type ApprovalStatus = "pending" | "approved" | "rejected";
+
 // User data shape stored in Firestore
-interface UserData {
+export interface UserData {
   uid: string;
   email: string;
   name: string;
-  role: "teacher" | "student";
+  role: "admin" | "teacher" | "student";
+  approvalStatus: ApprovalStatus;
+  approvedBy?: string;       // admin UID who approved
+  approvedAt?: string;       // ISO date when approved
+  rejectedAt?: string;       // ISO date when rejected
   createdAt: string;
 }
 
@@ -33,6 +44,15 @@ interface AuthContextType {
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   verifyEmail: () => Promise<void>;
+  refreshUserData: () => Promise<void>;
+  // Convenience flags
+  isAdmin: boolean;
+  isApprovedTeacher: boolean;
+  isPendingTeacher: boolean;
+  isRejectedTeacher: boolean;
+  isStudent: boolean;
+  /** True if the user has full access (admin, approved teacher, or student) */
+  hasFullAccess: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -59,7 +79,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         timeoutPromise,
       ]);
       if (userDoc.exists()) {
-        setUserData(userDoc.data() as UserData);
+        const data = userDoc.data() as UserData;
+        // Backward compatibility: if approvalStatus is missing, set defaults
+        if (!data.approvalStatus) {
+          if (data.role === "teacher") {
+            data.approvalStatus = "pending";
+          } else {
+            data.approvalStatus = "approved";
+          }
+        }
+        // Auto-detect admin by email
+        if (data.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase() && data.role !== "admin") {
+          data.role = "admin";
+          data.approvalStatus = "approved";
+          // Persist the admin role update to Firestore
+          await setDoc(doc(db, "users", firebaseUser.uid), { role: "admin", approvalStatus: "approved" }, { merge: true }).catch(console.error);
+        }
+        setUserData(data);
       } else {
         // User exists in Auth but not in Firestore — clear userData
         setUserData(null);
@@ -70,6 +106,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUserData(null);
     }
   }, []);
+
+  // Refresh user data (callable externally, e.g. after admin approves)
+  const refreshUserData = useCallback(async () => {
+    if (auth.currentUser) {
+      await fetchUserData(auth.currentUser);
+    }
+  }, [fetchUserData]);
 
   // Listen for auth state changes and fetch user data from Firestore
   useEffect(() => {
@@ -106,11 +149,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Signup: create auth user + store profile in Firestore
   const signup = useCallback(async (email: string, password: string, name: string, role: "teacher" | "student") => {
     const result = await createUserWithEmailAndPassword(auth, email, password);
+
+    // Determine actual role and approval status
+    const isAdminEmail = email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+    const actualRole: UserData["role"] = isAdminEmail ? "admin" : role;
+    const approvalStatus: ApprovalStatus = isAdminEmail
+      ? "approved"  // admin bypasses approval
+      : role === "student"
+        ? "approved"  // students get immediate access
+        : "pending";  // teachers need admin approval
+
     const newUser: UserData = {
       uid: result.user.uid,
       email,
       name,
-      role,
+      role: actualRole,
+      approvalStatus,
       createdAt: new Date().toISOString(),
     };
     await setDoc(doc(db, "users", result.user.uid), newUser);
@@ -143,8 +197,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // Convenience flags derived from userData
+  const isAdmin = userData?.role === "admin";
+  const isApprovedTeacher = userData?.role === "teacher" && userData?.approvalStatus === "approved";
+  const isPendingTeacher = userData?.role === "teacher" && userData?.approvalStatus === "pending";
+  const isRejectedTeacher = userData?.role === "teacher" && userData?.approvalStatus === "rejected";
+  const isStudent = userData?.role === "student";
+  const hasFullAccess = isAdmin || isApprovedTeacher || isStudent;
+
   return (
-    <AuthContext.Provider value={{ user, userData, loading, login, signup, logout, resetPassword, verifyEmail }}>
+    <AuthContext.Provider value={{
+      user, userData, loading, login, signup, logout, resetPassword, verifyEmail, refreshUserData,
+      isAdmin, isApprovedTeacher, isPendingTeacher, isRejectedTeacher, isStudent, hasFullAccess,
+    }}>
       {children}
     </AuthContext.Provider>
   );

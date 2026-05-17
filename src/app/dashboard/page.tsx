@@ -31,7 +31,7 @@ export default function DashboardPage() {
     if (!userData) return;
     setLoadingRooms(true);
     try {
-      const q = userData.role === "teacher"
+      const q = (userData.role === "teacher" || userData.role === "admin")
         ? query(collection(db, "rooms"), where("teacherId", "==", userData.uid))
         : query(collection(db, "rooms"), where("participants", "array-contains", userData.uid));
       const snapshot = await getDocs(q);
@@ -60,7 +60,7 @@ export default function DashboardPage() {
     );
   }
 
-  const isTeacher = userData.role === "teacher";
+  const isTeacher = userData.role === "teacher" || userData.role === "admin";
   const liveRooms = rooms.filter(r => r.isActive);
   const now = new Date();
   const upcomingRooms = rooms.filter(r => r.scheduledAt && new Date(r.scheduledAt) > now && !r.isActive);

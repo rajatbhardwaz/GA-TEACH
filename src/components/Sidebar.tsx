@@ -31,10 +31,16 @@ const secondaryNav = [
   },
 ];
 
+// Admin-only nav item
+const adminNav = {
+  label: "Teacher Management", href: "/admin",
+  icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+};
+
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { userData, logout } = useAuth();
+  const { userData, logout, isAdmin } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => { setMobileOpen(false); }, [pathname]);
@@ -47,6 +53,13 @@ export default function Sidebar() {
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard";
     return pathname.startsWith(href);
+  };
+
+  const getRoleLabel = () => {
+    if (!userData) return "";
+    if (userData.role === "admin") return "Admin";
+    if (userData.role === "teacher") return "Faculty";
+    return "Student";
   };
 
   const sidebarContent = (
@@ -72,6 +85,21 @@ export default function Sidebar() {
           </Link>
         ))}
 
+        {/* Admin section — only visible to admin */}
+        {isAdmin && (
+          <>
+            <div className="sidebar-section-label" style={{ marginTop: 8 }}>Administration</div>
+            <Link
+              href={adminNav.href}
+              className={`sidebar-item ${isActive(adminNav.href) ? "active" : ""}`}
+              onClick={() => setMobileOpen(false)}
+            >
+              {adminNav.icon}
+              {adminNav.label}
+            </Link>
+          </>
+        )}
+
         <div className="sidebar-section-label" style={{ marginTop: 8 }}>General</div>
         {secondaryNav.map((item) => (
           <Link
@@ -94,12 +122,18 @@ export default function Sidebar() {
             Log out
           </button>
           <div className="sidebar-user" style={{ marginTop: 4 }}>
-            <div style={{ width: 32, height: 32, borderRadius: "var(--radius-full)", background: "linear-gradient(135deg, var(--blue), #7c3aed)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "#fff", flexShrink: 0 }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: "var(--radius-full)",
+              background: userData.role === "admin"
+                ? "linear-gradient(135deg, #ef4444, #f97316)"
+                : "linear-gradient(135deg, var(--blue), #7c3aed)",
+              display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "#fff", flexShrink: 0,
+            }}>
               {userData.name.charAt(0).toUpperCase()}
             </div>
             <div style={{ minWidth: 0 }}>
               <p style={{ fontSize: 13, fontWeight: 500, color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{userData.name}</p>
-              <p style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "capitalize" }}>{userData.role === "teacher" ? "Faculty" : "Student"}</p>
+              <p style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "capitalize" }}>{getRoleLabel()}</p>
             </div>
           </div>
         </div>

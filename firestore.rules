@@ -1,27 +1,74 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users can read their own profile
+
+    // ─── Helper functions ───
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+
+    function isApprovedTeacher() {
+      return isAuthenticated() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "teacher" &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.approvalStatus == "approved";
+    }
+
+    function isTeacherOrAdmin() {
+      return isAdmin() || isApprovedTeacher();
+    }
+
+    // ─── Users collection ───
     match /users/{userId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      // Users can read their own profile
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      // Users can create their own profile during signup
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      // Users can update their own profile (but NOT role or approvalStatus)
+      allow update: if isAuthenticated() && (
+        // Admin can update any user (for approvals)
+        isAdmin() ||
+        // Users can update their own profile but cannot change role/approvalStatus
+        (request.auth.uid == userId &&
+         !request.resource.data.diff(resource.data).affectedKeys().hasAny(["role", "approvalStatus", "approvedBy", "approvedAt", "rejectedAt"]))
+      );
+      // Admin can read all users (for teacher management panel)
+      allow read: if isAdmin();
     }
 
-    // Rooms - authenticated users can read, teachers can create/update
+    // ─── Rooms ───
     match /rooms/{roomId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null;
+      // Any authenticated user can read rooms
+      allow read: if isAuthenticated();
+      // Only approved teachers or admin can create rooms
+      allow create: if isTeacherOrAdmin();
+      // Only the room's teacher or admin can update/delete
+      allow update, delete: if isAuthenticated() && (
+        isAdmin() ||
+        resource.data.teacherId == request.auth.uid
+      );
     }
 
-    // Recordings - authenticated users can read/write
+    // ─── Recordings ───
     match /recordings/{recordingId} {
-      allow read, write: if request.auth != null;
+      // Authenticated users can read recordings
+      allow read: if isAuthenticated();
+      // Only approved teachers or admin can write recordings
+      allow create: if isTeacherOrAdmin();
+      allow update, delete: if isAuthenticated() && (
+        isAdmin() ||
+        resource.data.uploadedById == request.auth.uid
+      );
     }
 
-    // Attendance - authenticated users can read/write
+    // ─── Attendance ───
     match /attendance/{docId} {
-      allow read, write: if request.auth != null;
+      // Authenticated users can read/write attendance (auto-tracked)
+      allow read, write: if isAuthenticated();
     }
   }
 }

@@ -44,7 +44,7 @@ export default function RoomDetailPage() {
   useEffect(() => { const load = async () => { setLoadingRoom(true); await Promise.all([fetchRoom(), fetchRecordings()]); setLoadingRoom(false); }; load(); }, [fetchRoom, fetchRecordings]);
 
   const copyCode = () => { if (room) { navigator.clipboard.writeText(room.roomCode); setCopied(true); setTimeout(() => setCopied(false), 2000); } };
-  const isTeacher = userData?.role === "teacher" && userData?.uid === room?.teacherId;
+  const isTeacher = (userData?.role === "teacher" || userData?.role === "admin") && userData?.uid === room?.teacherId;
 
   if (authLoading || loadingRoom) return (<div style={{ minHeight: "100vh", background: "var(--bg-base)", display: "flex", alignItems: "center", justifyContent: "center" }}><div className="spinner" /></div>);
   if (!room) return (<div style={{ minHeight: "100vh", background: "var(--bg-base)", display: "flex", alignItems: "center", justifyContent: "center" }}><div className="empty-state"><h3>Batch not found</h3><p>This batch may have been removed.</p><button className="btn-primary" style={{ marginTop: 16 }} onClick={() => router.push("/dashboard")}>Back to Dashboard</button></div></div>);
