@@ -87,18 +87,18 @@ export default function RecordingsPage() {
   const isTeacher = userData.role === "teacher";
 
   return (
-    <DashboardLayout title="Recordings">
+    <DashboardLayout title="Lecture Recordings">
       <div className="page-enter">
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 28, gap: 16, flexWrap: "wrap" }}>
           <div>
-            <h1 style={{ fontSize: 26, fontWeight: 700, marginBottom: 4 }}>Recordings</h1>
-            <p style={{ fontSize: 14, color: "var(--text-secondary)" }}>{isTeacher ? "Manage and upload class recordings" : "Watch recordings from your classes"}</p>
+            <h1 style={{ fontSize: 26, fontWeight: 700, marginBottom: 4 }}>Lecture Recordings</h1>
+            <p style={{ fontSize: 14, color: "var(--text-secondary)" }}>{isTeacher ? "Upload and manage lecture recordings for your batches" : "Revise your lectures anytime, anywhere"}</p>
           </div>
           {isTeacher && (
             <button className="btn-primary" onClick={() => setShowUploadModal(true)}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              Upload Recording
+              Upload Lecture
             </button>
           )}
         </div>
@@ -109,19 +109,19 @@ export default function RecordingsPage() {
             <div className="stat-icon" style={{ background: "var(--blue-light)", color: "var(--blue)" }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16"/></svg>
             </div>
-            <div><p className="stat-value">{recordings.length}</p><p className="stat-label">Total Recordings</p></div>
+            <div><p className="stat-value">{recordings.length}</p><p className="stat-label">Total Lectures</p></div>
           </div>
           <div className="stat-card">
             <div className="stat-icon" style={{ background: "var(--green-light)", color: "var(--green)" }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23,6 13.5,15.5 8.5,10.5 1,18"/><polyline points="17,6 23,6 23,12"/></svg>
             </div>
-            <div><p className="stat-value">{recentCount}</p><p className="stat-label">This Week</p></div>
+            <div><p className="stat-value">{recentCount}</p><p className="stat-label">Added This Week</p></div>
           </div>
           <div className="stat-card">
             <div className="stat-icon" style={{ background: "var(--yellow-light)", color: "var(--yellow)" }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
             </div>
-            <div><p className="stat-value">{subjects.length}</p><p className="stat-label">Subjects</p></div>
+            <div><p className="stat-value">{subjects.length}</p><p className="stat-label">Subjects Covered</p></div>
           </div>
         </div>
 
@@ -129,14 +129,14 @@ export default function RecordingsPage() {
         <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
           <div style={{ flex: 1, minWidth: 220, position: "relative" }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" className="input-field" placeholder="Search recordings..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ paddingLeft: 40 }} />
+            <input type="text" className="input-field" placeholder="Search lectures, batches..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ paddingLeft: 40 }} />
           </div>
           <select className="select-field" value={filterSubject} onChange={(e) => setFilterSubject(e.target.value)} style={{ width: "auto", minWidth: 160 }}>
             <option value="all">All Subjects</option>
             {subjects.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
           <select className="select-field" value={sortBy} onChange={(e) => setSortBy(e.target.value as "newest"|"oldest")} style={{ width: "auto", minWidth: 140 }}>
-            <option value="newest">Newest First</option>
+            <option value="newest">Latest First</option>
             <option value="oldest">Oldest First</option>
           </select>
         </div>
@@ -149,9 +149,9 @@ export default function RecordingsPage() {
             ) : filteredRecordings.length === 0 ? (
               <div className="card empty-state">
                 <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16"/></svg>
-                <h3>{searchQuery || filterSubject !== "all" ? "No matching recordings" : "No recordings yet"}</h3>
-                <p>{searchQuery || filterSubject !== "all" ? "Try adjusting your search or filters" : isTeacher ? "Record your classes using OBS, then upload here" : "Your teachers will add recordings after sessions"}</p>
-                {isTeacher && !searchQuery && filterSubject === "all" && <button className="btn-primary" style={{ marginTop: 16 }} onClick={() => setShowUploadModal(true)}>Upload First Recording</button>}
+                <h3>{searchQuery || filterSubject !== "all" ? "No matching lectures" : "No lectures recorded yet"}</h3>
+                <p>{searchQuery || filterSubject !== "all" ? "Try adjusting your search or filters" : isTeacher ? "Record your classes using OBS, then upload here for students to revise" : "Your faculty will upload lecture recordings after each session"}</p>
+                {isTeacher && !searchQuery && filterSubject === "all" && <button className="btn-primary" style={{ marginTop: 16 }} onClick={() => setShowUploadModal(true)}>Upload First Lecture</button>}
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -161,7 +161,7 @@ export default function RecordingsPage() {
                       borderColor: selectedRecording?.id === rec.id ? "var(--blue)" : undefined,
                       background: selectedRecording?.id === rec.id ? "var(--blue-light)" : undefined }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 14, flex: 1, minWidth: 0 }}>
-                      <div style={{ width: 56, height: 56, borderRadius: "var(--radius-md)", background: "linear-gradient(135deg, #1a1a2e, #16213e)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, position: "relative", overflow: "hidden" }}>
+                      <div style={{ width: 56, height: 56, borderRadius: "var(--radius-md)", background: "linear-gradient(135deg, #0a0a12, #16213e)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, position: "relative", overflow: "hidden" }}>
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" strokeWidth="2"><polygon points="5,3 19,12 5,21"/></svg>
                         {rec.duration && <span style={{ position: "absolute", bottom: 2, right: 2, fontSize: 9, fontWeight: 600, color: "#fff", background: "rgba(0,0,0,0.7)", padding: "1px 4px", borderRadius: 3, fontFamily: "monospace" }}>{rec.duration}</span>}
                       </div>
@@ -171,12 +171,10 @@ export default function RecordingsPage() {
                         <p style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>{formatDate(rec.createdAt)}{rec.fileSize ? ` · ${formatFileSize(rec.fileSize)}` : ""}</p>
                       </div>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-                      <a href={rec.link} target="_blank" rel="noopener noreferrer" className="btn-primary" style={{ padding: "7px 14px", fontSize: 12 }} onClick={(e) => e.stopPropagation()}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5,3 19,12 5,21"/></svg>
-                        Watch
-                      </a>
-                    </div>
+                    <a href={rec.link} target="_blank" rel="noopener noreferrer" className="btn-primary" style={{ padding: "7px 14px", fontSize: 12, flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5,3 19,12 5,21"/></svg>
+                      Watch
+                    </a>
                   </div>
                 ))}
               </div>
@@ -185,22 +183,22 @@ export default function RecordingsPage() {
 
           {/* Detail panel */}
           {selectedRecording && (
-            <div className="card recording-detail-panel" style={{ padding: 0, overflow: "hidden", position: "sticky", top: 80 }}>
+            <div className="card" style={{ padding: 0, overflow: "hidden", position: "sticky", top: 80 }}>
               <div style={{ background: "#000", position: "relative" }}>
                 <video ref={videoRef} src={selectedRecording.link} controls style={{ width: "100%", maxHeight: 220, display: "block" }} />
               </div>
               <div style={{ padding: "20px" }}>
                 <h3 style={{ fontSize: 16, fontWeight: 600, color: "var(--text-primary)", marginBottom: 14 }}>{selectedRecording.title}</h3>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  <DetailRow label="Class" value={selectedRecording.roomName} />
+                  <DetailRow label="Batch" value={selectedRecording.roomName} />
                   <DetailRow label="Subject" value={selectedRecording.roomSubject} />
-                  <DetailRow label="Teacher" value={selectedRecording.uploadedBy} />
+                  <DetailRow label="Faculty" value={selectedRecording.uploadedBy} />
                   <DetailRow label="Date" value={formatDate(selectedRecording.createdAt)} />
                   {selectedRecording.duration && <DetailRow label="Duration" value={selectedRecording.duration} />}
                   {selectedRecording.fileSize && <DetailRow label="Size" value={formatFileSize(selectedRecording.fileSize)} />}
                 </div>
                 <div style={{ display: "flex", gap: 8, marginTop: 20 }}>
-                  <a href={selectedRecording.link} target="_blank" rel="noopener noreferrer" className="btn-primary" style={{ flex: 1, textDecoration: "none", textAlign: "center", fontSize: 13 }}>Watch Full</a>
+                  <a href={selectedRecording.link} target="_blank" rel="noopener noreferrer" className="btn-primary" style={{ flex: 1, textDecoration: "none", textAlign: "center", fontSize: 13 }}>Watch Full Lecture</a>
                   <a href={selectedRecording.link} download className="btn-secondary" style={{ flex: 1, textDecoration: "none", textAlign: "center", fontSize: 13 }}>Download</a>
                 </div>
                 <button className="btn-secondary" onClick={() => setSelectedRecording(null)} style={{ width: "100%", marginTop: 8, fontSize: 13 }}>Close</button>

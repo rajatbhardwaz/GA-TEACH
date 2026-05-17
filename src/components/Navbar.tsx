@@ -32,7 +32,7 @@ export default function Navbar() {
 
   const navItems = [
     { label: "Dashboard", href: "/dashboard", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> },
-    { label: "Batches", href: "/dashboard", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg> },
+    { label: "My Batches", href: "/dashboard", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg> },
     { label: "Recordings", href: "/recordings", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16"/></svg> },
   ];
 
@@ -42,8 +42,8 @@ export default function Navbar() {
         <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 16px" }}>
           <div className="flex justify-between items-center" style={{ height: 56 }}>
             <Link href="/dashboard" style={{ textDecoration: "none", flexShrink: 0, display: "flex", alignItems: "center", gap: 8 }}>
-              <img src="/logo.png" alt="GA TEACH" style={{ width: 30, height: 30, borderRadius: 8, objectFit: "cover" }} />
-              <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "0.04em" }}>GA TEACH</span>
+              <img src="/logo.png" alt="Glorious Amplification" style={{ width: 30, height: 30, borderRadius: 8, objectFit: "cover" }} />
+              <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "0.02em" }}>Glorious Amplification</span>
             </Link>
 
             {user && userData && (
@@ -73,7 +73,7 @@ export default function Navbar() {
                         <div style={{ padding: "12px 14px", borderBottom: "1px solid var(--border)" }}>
                           <p style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>{userData.name}</p>
                           <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>{userData.email}</p>
-                          <span className={`badge ${userData.role === "teacher" ? "badge-teacher" : "badge-student"}`} style={{ marginTop: 8 }}>{userData.role}</span>
+                          <span className={`badge ${userData.role === "teacher" ? "badge-teacher" : "badge-student"}`} style={{ marginTop: 8 }}>{userData.role === "teacher" ? "Faculty" : "Student"}</span>
                         </div>
                         <div style={{ padding: "4px 0" }}>
                           <button className="profile-dropdown-item" onClick={() => { setProfileOpen(false); router.push("/dashboard"); }}>
@@ -96,7 +96,7 @@ export default function Navbar() {
               ) : (
                 <div className="flex items-center gap-2">
                   <Link href="/login"><button className="btn-secondary" style={{ padding: "7px 14px", fontSize: 13 }}>Sign In</button></Link>
-                  <Link href="/signup" className="hidden sm:inline"><button className="btn-primary" style={{ padding: "7px 14px", fontSize: 13 }}>Get Started</button></Link>
+                  <Link href="/signup" className="hidden sm:inline"><button className="btn-primary" style={{ padding: "7px 14px", fontSize: 13 }}>Start Learning</button></Link>
                 </div>
               )}
             </div>
@@ -123,7 +123,7 @@ export default function Navbar() {
                     <p style={{ fontSize: 12, color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{userData.email}</p>
                   </div>
                 </div>
-                <span className={`badge ${userData.role === "teacher" ? "badge-teacher" : "badge-student"}`} style={{ marginTop: 10 }}>{userData.role}</span>
+                <span className={`badge ${userData.role === "teacher" ? "badge-teacher" : "badge-student"}`} style={{ marginTop: 10 }}>{userData.role === "teacher" ? "Faculty" : "Student"}</span>
               </div>
             )}
             <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>

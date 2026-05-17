@@ -35,13 +35,13 @@ export default function LoginPage() {
 
       <div className="page-enter" style={{ width: "100%", maxWidth: 400, position: "relative", zIndex: 1 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 36 }}>
-          <img src="/logo.png" alt="GA TEACH" style={{ width: 36, height: 36, borderRadius: 10, objectFit: "cover" }} />
-          <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "0.04em" }}>GA TEACH</span>
+          <img src="/logo.png" alt="Glorious Amplification" style={{ width: 36, height: 36, borderRadius: 10, objectFit: "cover" }} />
+          <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "0.02em" }}>Glorious Amplification</span>
         </div>
 
         <div className="card" style={{ padding: 32 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 600, textAlign: "center", marginBottom: 4, color: "var(--text-primary)" }}>Welcome back</h1>
-          <p style={{ fontSize: 14, textAlign: "center", color: "var(--text-secondary)", marginBottom: 28 }}>Sign in to your account</p>
+          <h1 style={{ fontSize: 22, fontWeight: 600, textAlign: "center", marginBottom: 4, color: "var(--text-primary)" }}>Welcome back, aspirant</h1>
+          <p style={{ fontSize: 14, textAlign: "center", color: "var(--text-secondary)", marginBottom: 28 }}>Sign in to continue your preparation</p>
           {error && <div className="error-alert">{error}</div>}
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div>
@@ -58,8 +58,8 @@ export default function LoginPage() {
           </form>
         </div>
         <p style={{ fontSize: 14, textAlign: "center", marginTop: 20, color: "var(--text-secondary)" }}>
-          Don&apos;t have an account?{" "}
-          <Link href="/signup" style={{ color: "var(--blue)", fontWeight: 500 }}>Create one</Link>
+          New here?{" "}
+          <Link href="/signup" style={{ color: "var(--blue)", fontWeight: 500 }}>Create your account</Link>
         </p>
       </div>
     </div>
