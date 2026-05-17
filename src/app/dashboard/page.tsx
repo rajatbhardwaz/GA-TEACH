@@ -5,7 +5,7 @@ import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/firebase/config";
 import { useAuth } from "@/context/AuthContext";
 import { useProtectedRoute } from "@/hooks/useProtectedRoute";
-import Navbar from "@/components/Navbar";
+import DashboardLayout from "@/components/DashboardLayout";
 import CreateRoomModal from "@/components/CreateRoomModal";
 import JoinRoomModal from "@/components/JoinRoomModal";
 import Link from "next/link";
@@ -45,19 +45,17 @@ export default function DashboardPage() {
   useEffect(() => { if (userData) fetchRooms(); }, [userData, fetchRooms]);
 
   if (authLoading) {
-    return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}><div className="spinner" /></div>);
+    return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg-base)" }}><div className="spinner" /></div>);
   }
 
   if (!userData) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16, padding: 24, textAlign: "center" }}>
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <p style={{ color: "var(--color-text-secondary)", fontSize: 15, maxWidth: 360 }}>
-          Unable to load your profile. This can happen due to a slow connection.
-        </p>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16, padding: 24, textAlign: "center", background: "var(--bg-base)" }}>
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <p style={{ color: "var(--text-secondary)", fontSize: 15, maxWidth: 360 }}>Unable to load your profile.</p>
         <div style={{ display: "flex", gap: 10 }}>
-          <button className="btn-secondary" onClick={() => window.location.reload()} style={{ padding: "8px 20px", fontSize: 13 }}>Retry</button>
-          <a href="/login"><button className="btn-primary" style={{ padding: "8px 20px", fontSize: 13 }}>Go to Login</button></a>
+          <button className="btn-secondary" onClick={() => window.location.reload()}>Retry</button>
+          <a href="/login"><button className="btn-primary">Go to Login</button></a>
         </div>
       </div>
     );
@@ -68,42 +66,33 @@ export default function DashboardPage() {
   const now = new Date();
   const upcomingRooms = rooms.filter(r => r.scheduledAt && new Date(r.scheduledAt) > now && !r.isActive);
   const completedRooms = rooms.filter(r => !r.isActive && (!r.scheduledAt || new Date(r.scheduledAt) <= now));
-
-  const filteredRooms = activeTab === "upcoming" ? upcomingRooms
-    : activeTab === "completed" ? completedRooms : rooms;
+  const filteredRooms = activeTab === "upcoming" ? upcomingRooms : activeTab === "completed" ? completedRooms : rooms;
 
   const stats = [
-    { label: "Total Classes", value: rooms.length, color: "#2563eb", bg: "#eff6ff",
+    { label: "Total Classes", value: rooms.length, color: "var(--blue)", bg: "var(--blue-light)",
       icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg> },
-    { label: "Live Now", value: liveRooms.length, color: "#16a34a", bg: "#f0fdf4",
+    { label: "Live Now", value: liveRooms.length, color: "var(--green)", bg: "var(--green-light)",
       icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg> },
-    { label: "Upcoming", value: upcomingRooms.length, color: "#d97706", bg: "#fffbeb",
+    { label: "Upcoming", value: upcomingRooms.length, color: "var(--yellow)", bg: "var(--yellow-light)",
       icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg> },
-    { label: isTeacher ? "Students Enrolled" : "Completed", value: isTeacher ? rooms.reduce((s,r) => s + (r.participants?.length||0), 0) : completedRooms.length, color: "#7c3aed", bg: "#f5f3ff",
+    { label: isTeacher ? "Students" : "Completed", value: isTeacher ? rooms.reduce((s,r) => s + (r.participants?.length||0), 0) : completedRooms.length, color: "var(--purple)", bg: "var(--purple-light)",
       icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg> },
   ];
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--color-surface-elevated)" }}>
-      <Navbar />
-      <main style={{ maxWidth: 900, margin: "0 auto", padding: "32px 24px" }}>
-        {/* Profile header */}
-        <div className="page-enter dash-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32, flexWrap: "wrap", gap: 16 }}>
-          <div className="flex items-center gap-4">
-            <div style={{ width: 52, height: 52, borderRadius: "var(--radius-full)", background: "linear-gradient(135deg, #2563eb, #7c3aed)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 700, color: "#fff" }}>
-              {userData.name.charAt(0).toUpperCase()}
-            </div>
-            <div>
-              <h1 style={{ fontSize: 22, fontWeight: 700, color: "var(--color-text-primary)", marginBottom: 2 }}>
-                {getGreeting()}, {userData.name.split(" ")[0]}
-              </h1>
-              <div className="flex items-center gap-2">
-                <span className={`badge ${isTeacher ? "badge-teacher" : "badge-student"}`}>{userData.role}</span>
-                <span style={{ fontSize: 13, color: "var(--color-text-muted)" }}>{userData.email}</span>
-              </div>
-            </div>
+    <DashboardLayout title="Dashboard">
+      <div className="page-enter">
+        {/* Greeting + Actions */}
+        <div className="dash-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32, gap: 16, flexWrap: "wrap" }}>
+          <div>
+            <h1 style={{ fontSize: 26, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
+              {getGreeting()}, {userData.name.split(" ")[0]}
+            </h1>
+            <p style={{ fontSize: 14, color: "var(--text-secondary)" }}>
+              Here&apos;s what&apos;s happening with your classes today.
+            </p>
           </div>
-          <div className="flex gap-2 dash-actions">
+          <div className="flex gap-3 dash-actions">
             {isTeacher ? (
               <button className="btn-primary" onClick={() => setShowCreateModal(true)}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -115,21 +104,21 @@ export default function DashboardPage() {
                 Join with Code
               </button>
             )}
-            <button className="btn-primary" onClick={() => rooms.length > 0 ? setShowClassPicker(true) : (isTeacher ? setShowCreateModal(true) : setShowJoinModal(true))} style={{ background: "#16a34a" }}>
+            <button className="btn-success" onClick={() => rooms.length > 0 ? setShowClassPicker(true) : (isTeacher ? setShowCreateModal(true) : setShowJoinModal(true))}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
               {isTeacher ? "Start Class" : "Join Class"}
             </button>
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))", gap: 12, marginBottom: 28 }}>
+        {/* Stats Grid */}
+        <div className="stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 32 }}>
           {stats.map(s => (
-            <div key={s.label} className="card" style={{ padding: "18px 16px", display: "flex", alignItems: "center", gap: 14 }}>
-              <div style={{ width: 42, height: 42, borderRadius: "var(--radius-md)", background: s.bg, display: "flex", alignItems: "center", justifyContent: "center", color: s.color, flexShrink: 0 }}>{s.icon}</div>
+            <div key={s.label} className="stat-card">
+              <div className="stat-icon" style={{ background: s.bg, color: s.color }}>{s.icon}</div>
               <div>
-                <p style={{ fontSize: 22, fontWeight: 700, color: "var(--color-text-primary)", lineHeight: 1 }}>{s.value}</p>
-                <p style={{ fontSize: 12, color: "var(--color-text-muted)", marginTop: 2 }}>{s.label}</p>
+                <p className="stat-value">{s.value}</p>
+                <p className="stat-label">{s.label}</p>
               </div>
             </div>
           ))}
@@ -137,101 +126,154 @@ export default function DashboardPage() {
 
         {/* Live banner */}
         {liveRooms.length > 0 && (
-          <div className="card" style={{ padding: "14px 20px", marginBottom: 20, borderLeft: "3px solid var(--color-success)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
-            <div className="flex items-center gap-3">
+          <div className="card" style={{ padding: "16px 24px", marginBottom: 24, borderLeft: "3px solid var(--green)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <span className="badge badge-live">Live Now</span>
-              <span style={{ fontSize: 14, fontWeight: 500 }}>{liveRooms[0].roomName}</span>
+              <span style={{ fontSize: 14, fontWeight: 500, color: "var(--text-primary)" }}>{liveRooms[0].roomName}</span>
+              <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{liveRooms[0].subject}</span>
             </div>
-            <Link href={`/room/${liveRooms[0].id}/meeting`}><button className="btn-primary" style={{ padding: "6px 16px", fontSize: 13 }}>Join Now</button></Link>
+            <Link href={`/room/${liveRooms[0].id}/meeting`}>
+              <button className="btn-success" style={{ padding: "7px 18px", fontSize: 13 }}>Join Now</button>
+            </Link>
           </div>
         )}
 
-        {/* Tabs */}
-        <div className="flex items-center gap-1 tabs-row" style={{ marginBottom: 16, borderBottom: "1px solid var(--color-border)", paddingBottom: 0 }}>
-          {(["all","upcoming","completed"] as const).map(tab => (
-            <button key={tab} onClick={() => setActiveTab(tab)} style={{
-              padding: "10px 18px", fontSize: 13, fontWeight: 500, cursor: "pointer", border: "none", background: "transparent",
-              color: activeTab === tab ? "var(--color-primary)" : "var(--color-text-muted)",
-              borderBottom: activeTab === tab ? "2px solid var(--color-primary)" : "2px solid transparent",
-              transition: "all var(--transition-fast)", textTransform: "capitalize",
-            }}>{tab === "all" ? `All (${rooms.length})` : tab === "upcoming" ? `Upcoming (${upcomingRooms.length})` : `Completed (${completedRooms.length})`}</button>
-          ))}
-        </div>
+        {/* Two-column layout: Classes + Activity */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 24, alignItems: "start" }}>
+          {/* Left: Class list */}
+          <div>
+            {/* Tabs */}
+            <div style={{ display: "flex", alignItems: "center", gap: 2, marginBottom: 20, borderBottom: "1px solid var(--border)" }}>
+              {(["all","upcoming","completed"] as const).map(tab => (
+                <button key={tab} onClick={() => setActiveTab(tab)} style={{
+                  padding: "10px 18px", fontSize: 13, fontWeight: 500, cursor: "pointer", border: "none", background: "transparent",
+                  color: activeTab === tab ? "var(--blue)" : "var(--text-muted)",
+                  borderBottom: activeTab === tab ? "2px solid var(--blue)" : "2px solid transparent",
+                  transition: "all var(--transition-fast)", textTransform: "capitalize",
+                }}>{tab === "all" ? `All (${rooms.length})` : tab === "upcoming" ? `Upcoming (${upcomingRooms.length})` : `Completed (${completedRooms.length})`}</button>
+              ))}
+            </div>
 
-        {/* Class list */}
-        {loadingRooms ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>{[1,2,3].map(i => <div key={i} className="skeleton" style={{ height: 72 }}/>)}</div>
-        ) : filteredRooms.length === 0 ? (
-          <div className="card empty-state" style={{ marginTop: 8 }}>
-            <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" strokeWidth="1.5"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-            <h3>{activeTab === "all" ? "No classes yet" : `No ${activeTab} classes`}</h3>
-            <p>{isTeacher ? "Create a batch to get started" : "Join a class with a room code"}</p>
-            {activeTab === "all" && <button className="btn-primary" style={{ marginTop: 16 }} onClick={() => isTeacher ? setShowCreateModal(true) : setShowJoinModal(true)}>{isTeacher ? "Create Batch" : "Join Class"}</button>}
-          </div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {filteredRooms.map(room => (
-              <div key={room.id} className="card" style={{ padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-                <Link href={`/room/${room.id}`} style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 14, flex: 1, minWidth: 0 }}>
-                  <div style={{ width: 42, height: 42, borderRadius: "var(--radius-md)", background: room.isActive ? "#f0fdf4" : "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={room.isActive ? "#16a34a" : "#2563eb"} strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-                  </div>
-                  <div style={{ minWidth: 0 }}>
-                    <p style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text-primary)", marginBottom: 2 }}>{room.roomName}</p>
-                    <p style={{ fontSize: 12, color: "var(--color-text-muted)" }}>
-                      {room.subject} · {room.teacherName}
-                      {room.scheduledAt && ` · ${formatDate(room.scheduledAt)}`}
-                    </p>
-                  </div>
-                </Link>
-                <div className="flex items-center gap-2" style={{ flexShrink: 0 }}>
-                  {room.isActive && <span className="badge badge-live">Live</span>}
-                  {isTeacher && <span style={{ fontSize: 11, fontFamily: "monospace", fontWeight: 600, color: "var(--color-primary)", background: "var(--color-primary-light)", padding: "3px 8px", borderRadius: "var(--radius-sm)" }}>{room.roomCode}</span>}
-                  {isTeacher && (
-                    <Link href={`/room/${room.id}/attendance`} title="Attendance">
-                      <button className="btn-icon" style={{ width: 32, height: 32 }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17,11 19,13 23,9"/></svg>
-                      </button>
-                    </Link>
-                  )}
-                  <Link href={`/room/${room.id}`}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" strokeWidth="2"><polyline points="9,18 15,12 9,6"/></svg></Link>
-                </div>
+            {/* Room list */}
+            {loadingRooms ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>{[1,2,3].map(i => <div key={i} className="skeleton" style={{ height: 72 }}/>)}</div>
+            ) : filteredRooms.length === 0 ? (
+              <div className="card empty-state" style={{ marginTop: 8 }}>
+                <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="1.5"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+                <h3>{activeTab === "all" ? "No classes yet" : `No ${activeTab} classes`}</h3>
+                <p>{isTeacher ? "Create a batch to get started" : "Join a class with a room code"}</p>
+                {activeTab === "all" && <button className="btn-primary" style={{ marginTop: 16 }} onClick={() => isTeacher ? setShowCreateModal(true) : setShowJoinModal(true)}>{isTeacher ? "Create Batch" : "Join Class"}</button>}
               </div>
-            ))}
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {filteredRooms.map(room => (
+                  <Link key={room.id} href={`/room/${room.id}`} style={{ textDecoration: "none" }}>
+                    <div className="card card-interactive" style={{ padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, cursor: "pointer" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 14, flex: 1, minWidth: 0 }}>
+                        <div style={{ width: 42, height: 42, borderRadius: "var(--radius-md)", background: room.isActive ? "var(--green-light)" : "var(--blue-light)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={room.isActive ? "var(--green)" : "var(--blue)"} strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+                        </div>
+                        <div style={{ minWidth: 0 }}>
+                          <p style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)", marginBottom: 3 }}>{room.roomName}</p>
+                          <p style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                            {room.subject} · {room.teacherName}
+                            {room.scheduledAt && ` · ${formatDate(room.scheduledAt)}`}
+                          </p>
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                        {room.isActive && <span className="badge badge-live">Live</span>}
+                        {isTeacher && <span style={{ fontSize: 11, fontFamily: "monospace", fontWeight: 600, color: "var(--blue)", background: "var(--blue-light)", padding: "3px 8px", borderRadius: "var(--radius-sm)" }}>{room.roomCode}</span>}
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2"><polyline points="9,18 15,12 9,6"/></svg>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
-        )}
-      </main>
+
+          {/* Right: Quick Info Panel */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {/* Quick Actions */}
+            <div className="card" style={{ padding: 20 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)", marginBottom: 16 }}>Quick Actions</h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <button className="btn-primary" style={{ width: "100%", justifyContent: "flex-start" }} onClick={() => isTeacher ? setShowCreateModal(true) : setShowJoinModal(true)}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  {isTeacher ? "Create New Batch" : "Join with Code"}
+                </button>
+                <Link href="/recordings" style={{ textDecoration: "none" }}>
+                  <button className="btn-secondary" style={{ width: "100%", justifyContent: "flex-start" }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16"/></svg>
+                    View Recordings
+                  </button>
+                </Link>
+              </div>
+            </div>
+
+            {/* Recent Activity */}
+            <div className="card" style={{ padding: 20 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)", marginBottom: 16 }}>Recent Activity</h3>
+              {rooms.length === 0 ? (
+                <p style={{ fontSize: 13, color: "var(--text-muted)" }}>No recent activity</p>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {rooms.slice(0, 4).map(room => (
+                    <div key={room.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: room.isActive ? "var(--green)" : "var(--text-muted)", flexShrink: 0 }} />
+                      <div style={{ minWidth: 0 }}>
+                        <p style={{ fontSize: 13, fontWeight: 500, color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{room.roomName}</p>
+                        <p style={{ fontSize: 11, color: "var(--text-muted)" }}>{formatDate(room.createdAt)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Platform Info */}
+            <div className="card" style={{ padding: 20, background: "var(--blue-light)", borderColor: "rgba(59,130,246,0.15)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <img src="/logo.png" alt="GA TEACH" style={{ width: 22, height: 22, borderRadius: 6, objectFit: "cover" }} />
+                <span style={{ fontSize: 13, fontWeight: 600, color: "var(--blue)" }}>GA TEACH</span>
+              </div>
+              <p style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.6 }}>
+                Powered by Jitsi Meet. HD video, real-time attendance, and class recordings.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Class picker modal */}
       {showClassPicker && (
         <div className="modal-overlay" onClick={() => setShowClassPicker(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 480 }}>
             <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 4 }}>{isTeacher ? "Start a class" : "Which class?"}</h2>
-            <p style={{ fontSize: 13, color: "var(--color-text-secondary)", marginBottom: 20 }}>Select a class to join the session</p>
+            <p style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 20 }}>Select a class to join the session</p>
             {rooms.length === 0 ? (
               <div style={{ textAlign: "center", padding: "24px 0" }}>
-                <p style={{ fontSize: 14, color: "var(--color-text-muted)", marginBottom: 16 }}>No classes found</p>
+                <p style={{ fontSize: 14, color: "var(--text-muted)", marginBottom: 16 }}>No classes found</p>
                 <button className="btn-primary" onClick={() => { setShowClassPicker(false); isTeacher ? setShowCreateModal(true) : setShowJoinModal(true); }}>{isTeacher ? "Create Batch" : "Join with Code"}</button>
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 320, overflowY: "auto" }}>
                 {rooms.map(room => (
                   <Link key={room.id} href={`/room/${room.id}/meeting`} onClick={() => setShowClassPicker(false)} style={{ textDecoration: "none" }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)", cursor: "pointer", transition: "all var(--transition-fast)" }}
-                      onMouseEnter={e => { e.currentTarget.style.background = "var(--color-surface-hover)"; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
-                      <div className="flex items-center gap-3">
-                        <div style={{ width: 36, height: 36, borderRadius: "var(--radius-md)", background: room.isActive ? "#f0fdf4" : "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={room.isActive ? "#16a34a" : "#2563eb"} strokeWidth="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                    <div className="card card-interactive" style={{ padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: "var(--radius-md)", background: room.isActive ? "var(--green-light)" : "var(--blue-light)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={room.isActive ? "var(--green)" : "var(--blue)"} strokeWidth="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
                         </div>
                         <div>
-                          <p style={{ fontSize: 14, fontWeight: 500, color: "var(--color-text-primary)", marginBottom: 2 }}>{room.roomName}</p>
-                          <p style={{ fontSize: 12, color: "var(--color-text-muted)" }}>{room.subject}</p>
+                          <p style={{ fontSize: 14, fontWeight: 500, color: "var(--text-primary)", marginBottom: 2 }}>{room.roomName}</p>
+                          <p style={{ fontSize: 12, color: "var(--text-muted)" }}>{room.subject}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         {room.isActive && <span className="badge badge-live" style={{ fontSize: 10 }}>Live</span>}
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" strokeWidth="2"><polyline points="9,18 15,12 9,6"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2"><polyline points="9,18 15,12 9,6"/></svg>
                       </div>
                     </div>
                   </Link>
@@ -247,7 +289,7 @@ export default function DashboardPage() {
 
       <CreateRoomModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} onRoomCreated={fetchRooms} />
       <JoinRoomModal isOpen={showJoinModal} onClose={() => setShowJoinModal(false)} onRoomJoined={fetchRooms} />
-    </div>
+    </DashboardLayout>
   );
 }
 

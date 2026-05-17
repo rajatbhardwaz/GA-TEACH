@@ -1,0 +1,68 @@
+"use client";
+
+import { ReactNode } from "react";
+import { useAuth } from "@/context/AuthContext";
+import Sidebar from "@/components/Sidebar";
+
+interface DashboardLayoutProps {
+  children: ReactNode;
+  title?: string;
+  wide?: boolean;
+}
+
+export default function DashboardLayout({ children, title, wide }: DashboardLayoutProps) {
+  const { userData } = useAuth();
+
+  return (
+    <div className="app-layout">
+      <Sidebar />
+      <div className="main-content">
+        {/* Topbar */}
+        <header className="topbar">
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            {title && (
+              <h1 style={{ fontSize: 15, fontWeight: 600, color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
+                {title}
+              </h1>
+            )}
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            {/* Search */}
+            <div className="topbar-search">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" placeholder="Search..." />
+            </div>
+
+            {/* Notification bell */}
+            <button className="btn-icon" style={{ border: "none" }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
+              </svg>
+            </button>
+
+            {/* User pill */}
+            {userData && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 10px 4px 4px", borderRadius: "var(--radius-full)", background: "var(--bg-elevated)", border: "1px solid var(--border)" }}>
+                <div style={{ width: 28, height: 28, borderRadius: "var(--radius-full)", background: "linear-gradient(135deg, var(--blue), #7c3aed)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#fff" }}>
+                  {userData.name.charAt(0).toUpperCase()}
+                </div>
+                <span style={{ fontSize: 12.5, fontWeight: 500, color: "var(--text-primary)", maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {userData.name.split(" ")[0]}
+                </span>
+                <span className={`badge ${userData.role === "teacher" ? "badge-teacher" : "badge-student"}`} style={{ fontSize: 9, padding: "2px 6px" }}>
+                  {userData.role}
+                </span>
+              </div>
+            )}
+          </div>
+        </header>
+
+        {/* Content */}
+        <main className={wide ? "page-content-wide" : "page-content"}>
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+}
