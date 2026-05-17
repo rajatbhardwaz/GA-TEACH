@@ -19,7 +19,7 @@ export default function DashboardLayout({ children, title, wide }: DashboardLayo
       <div className="main-content">
         {/* Topbar */}
         <header className="topbar">
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <div className="topbar-title-area" style={{ display: "flex", alignItems: "center", gap: 16 }}>
             {title && (
               <h1 style={{ fontSize: 15, fontWeight: 600, color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
                 {title}
