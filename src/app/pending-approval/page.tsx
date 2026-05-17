@@ -143,8 +143,8 @@ export default function PendingApprovalPage() {
             </div>
             <p style={{ fontSize: 12.5, color: "var(--text-secondary)", lineHeight: 1.6 }}>
               Contact the administrator at{" "}
-              <a href="mailto:rajat@gloriousamplification.com" style={{ color: "var(--blue)", fontWeight: 500 }}>
-                rajat@gloriousamplification.com
+              <a href="mailto:admin.gloriousamplification@gmail.com" style={{ color: "var(--blue)", fontWeight: 500 }}>
+                admin.gloriousamplification@gmail.com
               </a>
               {" "}for questions about your account status.
             </p>

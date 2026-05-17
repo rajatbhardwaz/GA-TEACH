@@ -17,7 +17,7 @@ import { auth, db } from "@/firebase/config";
 
 // Admin email — the single admin account on the platform
 // Configurable via NEXT_PUBLIC_ADMIN_EMAIL env variable
-const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "rajat@gloriousamplification.com";
+const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin.gloriousamplification@gmail.com";
 
 // Approval statuses for teacher accounts
 export type ApprovalStatus = "pending" | "approved" | "rejected";
