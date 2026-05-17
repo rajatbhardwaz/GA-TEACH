@@ -93,7 +93,7 @@ export default function DashboardPage() {
                 : "Stay consistent. Your preparation today shapes your success tomorrow."}
             </p>
           </div>
-          <div className="flex gap-3 dash-actions">
+          <div className="dash-actions" style={{ display: "flex", gap: 12 }}>
             {isTeacher ? (
               <button className="btn-primary" onClick={() => setShowCreateModal(true)}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -127,7 +127,7 @@ export default function DashboardPage() {
 
         {/* Live class banner */}
         {liveRooms.length > 0 && (
-          <div className="card" style={{ padding: "16px 24px", marginBottom: 24, borderLeft: "3px solid var(--green)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+          <div className="card live-banner" style={{ padding: "16px 24px", marginBottom: 24, borderLeft: "3px solid var(--green)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <span className="badge badge-live">Live Now</span>
               <span style={{ fontSize: 14, fontWeight: 500, color: "var(--text-primary)" }}>{liveRooms[0].roomName}</span>
@@ -140,11 +140,11 @@ export default function DashboardPage() {
         )}
 
         {/* Two-column layout: Batches + Activity */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 24, alignItems: "start" }}>
+        <div className="dash-two-col" style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 24, alignItems: "start" }}>
           {/* Left: Batch list */}
           <div>
             {/* Tabs */}
-            <div style={{ display: "flex", alignItems: "center", gap: 2, marginBottom: 20, borderBottom: "1px solid var(--border)" }}>
+            <div className="batch-tabs" style={{ display: "flex", alignItems: "center", gap: 2, marginBottom: 20, borderBottom: "1px solid var(--border)" }}>
               {(["all","upcoming","completed"] as const).map(tab => (
                 <button key={tab} onClick={() => setActiveTab(tab)} style={{
                   padding: "10px 18px", fontSize: 13, fontWeight: 500, cursor: "pointer", border: "none", background: "transparent",
@@ -258,7 +258,7 @@ export default function DashboardPage() {
             {/* Motivational Card */}
             <div className="card" style={{ padding: 20, background: "var(--blue-light)", borderColor: "rgba(59,130,246,0.15)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                <img src="/logo.png" alt="GA" style={{ width: 22, height: 22, borderRadius: 6, objectFit: "cover" }} />
+                <img src="/logo.png" alt="GA" style={{ width: 30, height: 30, objectFit: "contain" }} />
                 <span style={{ fontSize: 13, fontWeight: 600, color: "var(--blue)" }}>Glorious Amplification</span>
               </div>
               <p style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.6, fontStyle: "italic" }}>

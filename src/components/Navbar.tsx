@@ -42,8 +42,8 @@ export default function Navbar() {
         <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 16px" }}>
           <div className="flex justify-between items-center" style={{ height: 56 }}>
             <Link href="/dashboard" style={{ textDecoration: "none", flexShrink: 0, display: "flex", alignItems: "center", gap: 8 }}>
-              <img src="/logo.png" alt="Glorious Amplification" style={{ width: 30, height: 30, borderRadius: 8, objectFit: "cover" }} />
-              <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "0.02em" }}>Glorious Amplification</span>
+              <img src="/logo.png" alt="Glorious Amplification" style={{ width: 40, height: 40, objectFit: "contain" }} />
+              <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "0.02em" }}>Glorious Amplification</span>
             </Link>
 
             {user && userData && (

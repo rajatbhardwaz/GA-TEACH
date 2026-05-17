@@ -26,8 +26,8 @@ export default function Home() {
       {/* Top nav */}
       <nav style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 32px", position: "relative", zIndex: 1 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <img src="/logo.png" alt="Glorious Amplification" style={{ width: 34, height: 34, borderRadius: 10, objectFit: "cover" }} />
-          <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "0.02em" }}>Glorious Amplification</span>
+          <img src="/logo.png" alt="Glorious Amplification" style={{ width: 44, height: 44, objectFit: "contain" }} />
+          <span style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "0.02em" }}>Glorious Amplification</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <Link href="/login"><button className="btn-secondary" style={{ padding: "8px 18px", fontSize: 13 }}>Sign In</button></Link>
@@ -69,7 +69,7 @@ export default function Home() {
         </div>
 
         {/* Feature cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginTop: 80, opacity: mounted ? 1 : 0, transform: mounted ? "translateY(0)" : "translateY(20px)", transition: "opacity 700ms ease-out 300ms, transform 700ms ease-out 300ms" }}>
+        <div className="feature-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginTop: 80, opacity: mounted ? 1 : 0, transform: mounted ? "translateY(0)" : "translateY(20px)", transition: "opacity 700ms ease-out 300ms, transform 700ms ease-out 300ms" }}>
           {[
             { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" strokeWidth="1.8"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>, title: "Live Coaching", desc: "HD live classes with real-time doubt solving and faculty interaction" },
             { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="1.8"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17,11 19,13 23,9"/></svg>, title: "Smart Attendance", desc: "Auto-tracked attendance for every lecture and practice session" },
@@ -86,7 +86,7 @@ export default function Home() {
         </div>
 
         {/* Trust markers */}
-        <div style={{ marginTop: 56, display: "flex", justifyContent: "center", gap: 32, flexWrap: "wrap" }}>
+        <div className="trust-markers" style={{ marginTop: 56, display: "flex", justifyContent: "center", gap: 32, flexWrap: "wrap" }}>
           {[
             { value: "500+", label: "Students Enrolled" },
             { value: "50+", label: "Batches Completed" },

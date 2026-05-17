@@ -61,7 +61,7 @@ export default function MeetingPage() {
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, background: "var(--bg-base)", position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%)", top: -200, right: -200, pointerEvents: "none" }} />
 
-        <div className="page-enter" style={{ width: "100%", maxWidth: 520, position: "relative", zIndex: 1 }}>
+        <div className="page-enter meeting-prejoin-card" style={{ width: "100%", maxWidth: 520, position: "relative", zIndex: 1 }}>
           <Link href={`/room/${roomId}`} style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 24, display: "inline-flex", alignItems: "center", gap: 6, textDecoration: "none" }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12,19 5,12 12,5"/></svg>
             Back to Batch
@@ -71,7 +71,7 @@ export default function MeetingPage() {
             <div style={{ height: 4, background: room.isActive ? "linear-gradient(90deg, var(--green), #4ade80)" : "linear-gradient(90deg, var(--blue), #818cf8)" }} />
             
             {/* Classroom preview */}
-            <div style={{ height: 200, background: "linear-gradient(135deg, #0a0a12, #111118)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, position: "relative" }}>
+            <div className="meeting-prejoin-preview" style={{ height: 200, background: "linear-gradient(135deg, #0a0a12, #111118)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, position: "relative" }}>
               <div style={{ width: 80, height: 80, borderRadius: "var(--radius-full)", background: "linear-gradient(135deg, var(--blue), #7c3aed)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 32px rgba(59,130,246,0.3)" }}>
                 <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
               </div>

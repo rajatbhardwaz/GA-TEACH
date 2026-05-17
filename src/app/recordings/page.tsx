@@ -142,7 +142,7 @@ export default function RecordingsPage() {
         </div>
 
         {/* Recording list + detail */}
-        <div style={{ display: "grid", gridTemplateColumns: selectedRecording ? "1fr 380px" : "1fr", gap: 20, alignItems: "start" }}>
+        <div className="recordings-grid" style={{ display: "grid", gridTemplateColumns: selectedRecording ? "1fr 380px" : "1fr", gap: 20, alignItems: "start" }}>
           <div>
             {loading ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>{[1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height: 88 }}/>)}</div>

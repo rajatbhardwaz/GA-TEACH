@@ -53,8 +53,8 @@ export default function Sidebar() {
     <>
       {/* Logo area */}
       <div className="sidebar-logo">
-        <img src="/logo.png" alt="Glorious Amplification" style={{ width: 30, height: 30, borderRadius: 8, objectFit: "cover" }} />
-        <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "0.02em" }}>Glorious Amplification</span>
+        <img src="/logo.png" alt="Glorious Amplification" style={{ width: 40, height: 40, objectFit: "contain" }} />
+        <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "0.02em" }}>Glorious Amplification</span>
       </div>
 
       {/* Main nav */}
