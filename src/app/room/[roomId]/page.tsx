@@ -68,14 +68,14 @@ export default function RoomDetailPage() {
                   {room.isActive && <span className="badge badge-live">Live Class</span>}
                 </div>
                 <p style={{ fontSize: 15, color: "var(--text-secondary)", marginBottom: 14 }}>{room.subject}</p>
-                <div style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
+                <div className="room-detail-meta" style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
                   <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Faculty: {room.teacherName}</span>
                   <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Created: {formatDate(room.createdAt)}</span>
                   <span style={{ fontSize: 13, color: "var(--text-muted)" }}>{room.participants?.length || 0} students enrolled</span>
                 </div>
               </div>
               {isTeacher && (
-                <div onClick={copyCode} style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", background: "var(--blue-light)", border: "1px solid rgba(59,130,246,0.15)", borderRadius: "var(--radius-md)", cursor: "pointer" }}>
+                <div className="batch-code-box" onClick={copyCode} style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", background: "var(--blue-light)", border: "1px solid rgba(59,130,246,0.15)", borderRadius: "var(--radius-md)", cursor: "pointer" }}>
                   <div>
                     <p style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 2 }}>BATCH CODE</p>
                     <p style={{ fontFamily: "monospace", fontSize: 18, fontWeight: 700, color: "var(--blue)", letterSpacing: "0.1em" }}>{room.roomCode}</p>

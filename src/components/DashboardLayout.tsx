@@ -71,8 +71,8 @@ export default function DashboardLayout({ children, title, wide }: DashboardLayo
 
             {/* User pill */}
             {userData && (
-              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 10px 4px 4px", borderRadius: "var(--radius-full)", background: "var(--bg-elevated)", border: "1px solid var(--border)" }}>
-                <div style={{
+              <div className="topbar-user-pill" style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 10px 4px 4px", borderRadius: "var(--radius-full)", background: "var(--bg-elevated)", border: "1px solid var(--border)" }}>
+                <div className="user-avatar" style={{
                   width: 28, height: 28, borderRadius: "var(--radius-full)",
                   background: userData.role === "admin"
                     ? "linear-gradient(135deg, #ef4444, #f97316)"
@@ -81,10 +81,10 @@ export default function DashboardLayout({ children, title, wide }: DashboardLayo
                 }}>
                   {userData.name.charAt(0).toUpperCase()}
                 </div>
-                <span style={{ fontSize: 12.5, fontWeight: 500, color: "var(--text-primary)", maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <span className="user-name" style={{ fontSize: 12.5, fontWeight: 500, color: "var(--text-primary)", maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {userData.name.split(" ")[0]}
                 </span>
-                <span className={`badge ${userData.role === "admin" ? "badge-teacher" : userData.role === "teacher" ? "badge-teacher" : "badge-student"}`} style={{ fontSize: 9, padding: "2px 6px" }}>
+                <span className={`badge user-badge ${userData.role === "admin" ? "badge-teacher" : userData.role === "teacher" ? "badge-teacher" : "badge-student"}`} style={{ fontSize: 9, padding: "2px 6px" }}>
                   {userData.role === "admin" ? "Admin" : userData.role === "teacher" ? "Faculty" : "Student"}
                 </span>
               </div>

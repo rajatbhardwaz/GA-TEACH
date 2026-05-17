@@ -83,11 +83,11 @@ export default function MeetingPage() {
               )}
             </div>
 
-            <div style={{ padding: "28px 32px" }}>
+            <div className="meeting-prejoin-content" style={{ padding: "28px 32px" }}>
               <h1 style={{ fontSize: 22, fontWeight: 600, color: "var(--text-primary)", marginBottom: 6 }}>{room.roomName}</h1>
               <p style={{ fontSize: 14, color: "var(--text-secondary)", marginBottom: 20 }}>{room.subject} • Faculty: {room.teacherName}</p>
 
-              <div style={{ display: "flex", gap: 20, padding: "16px 0", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", marginBottom: 24, flexWrap: "wrap" }}>
+              <div className="meeting-prejoin-stats" style={{ display: "flex", gap: 20, padding: "16px 0", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", marginBottom: 24, flexWrap: "wrap" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
                   <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>{room.participants?.length || 0} students enrolled</span>
@@ -113,7 +113,7 @@ export default function MeetingPage() {
                 </div>
               </div>
 
-              <div style={{ display: "flex", gap: 12 }}>
+              <div className="meeting-prejoin-actions" style={{ display: "flex", gap: 12 }}>
                 <button className="btn-primary" style={{ flex: 1, padding: "14px 24px", fontSize: 15 }} onClick={async () => {
                   if (isTeacher) {
                     const sessionId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -141,8 +141,8 @@ export default function MeetingPage() {
   // Active classroom view
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "#000", overflow: "hidden" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 16px", background: "var(--bg-surface)", borderBottom: "1px solid var(--border)", zIndex: 20, flexShrink: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      <div className="meeting-topbar" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 16px", background: "var(--bg-surface)", borderBottom: "1px solid var(--border)", zIndex: 20, flexShrink: 0 }}>
+        <div className="meeting-topbar-info" style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <button onClick={() => router.push("/dashboard")} className="btn-icon" title="Back to Dashboard" style={{ width: 36, height: 36 }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12,19 5,12 12,5"/></svg>
           </button>

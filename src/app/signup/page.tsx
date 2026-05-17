@@ -136,16 +136,16 @@ export default function SignupPage() {
   );
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, background: "var(--bg-base)", position: "relative", overflow: "hidden" }}>
+    <div className="auth-card-wrapper" style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, background: "var(--bg-base)", position: "relative", overflow: "hidden" }}>
       <div style={{ position: "absolute", width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(circle, rgba(34,197,94,0.05) 0%, transparent 60%)", bottom: -200, left: -100, pointerEvents: "none" }} />
 
       <div className="page-enter" style={{ width: "100%", maxWidth: 420, position: "relative", zIndex: 1 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 36 }}>
+        <div className="auth-logo" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 36 }}>
           <img src="/logo.png" alt="Glorious Amplification" style={{ width: 44, height: 44, objectFit: "contain" }} />
           <span style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "0.02em" }}>Glorious Amplification</span>
         </div>
 
-        <div className="card" style={{ padding: 32 }}>
+        <div className="card auth-card-inner" style={{ padding: 32 }}>
           <h1 style={{ fontSize: 22, fontWeight: 600, textAlign: "center", marginBottom: 4, color: "var(--text-primary)" }}>Begin your journey</h1>
           <p style={{ fontSize: 14, textAlign: "center", color: "var(--text-secondary)", marginBottom: 28 }}>Register as a student or faculty member</p>
           {error && <div className="error-alert">{error}</div>}
@@ -158,7 +158,7 @@ export default function SignupPage() {
             </div>
             <div>
               <label className="field-label">I am a</label>
-              <div style={{ display: "flex", gap: 8 }}>
+              <div className="role-selector" style={{ display: "flex", gap: 8 }}>
                 {([
                   { key: "student" as const, label: "Student / Aspirant", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg> },
                   { key: "teacher" as const, label: "Faculty / Mentor", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> },

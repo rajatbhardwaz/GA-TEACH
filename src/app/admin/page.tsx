@@ -194,9 +194,9 @@ export default function AdminPage() {
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {filteredTeachers.map(teacher => (
-                  <div
+                    <div
                     key={teacher.uid}
-                    className="card card-interactive"
+                    className="card card-interactive admin-teacher-card"
                     onClick={() => setSelectedTeacher(selectedTeacher?.uid === teacher.uid ? null : teacher)}
                     style={{
                       padding: "18px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, cursor: "pointer",
@@ -218,7 +218,7 @@ export default function AdminPage() {
                         <p style={{ fontSize: 12, color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{teacher.email}</p>
                       </div>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+                    <div className="admin-teacher-actions" style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
                       {getStatusBadge(teacher.approvalStatus)}
                       {(teacher.approvalStatus || "pending") === "pending" && (
                         <div style={{ display: "flex", gap: 6 }}>
@@ -269,7 +269,7 @@ export default function AdminPage() {
 
           {/* Detail panel */}
           {selectedTeacher && (
-            <div className="card" style={{ padding: 0, overflow: "hidden", position: "sticky", top: 80 }}>
+            <div className="card admin-detail-panel" style={{ padding: 0, overflow: "hidden", position: "sticky", top: 80 }}>
               {/* Header gradient */}
               <div style={{ height: 80, background: "linear-gradient(135deg, var(--blue), #7c3aed)", position: "relative" }}>
                 <div style={{

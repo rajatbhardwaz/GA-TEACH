@@ -50,9 +50,9 @@ export default function PendingApprovalPage() {
           <span style={{ fontSize: 17, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "0.02em" }}>Glorious Amplification</span>
         </div>
 
-        <div className="card" style={{ padding: 40, textAlign: "center" }}>
+        <div className="card pending-card" style={{ padding: 40, textAlign: "center" }}>
           {/* Status Icon */}
-          <div style={{
+          <div className="pending-status-icon" style={{
             width: 72, height: 72, borderRadius: "50%", margin: "0 auto 24px",
             background: isRejectedTeacher
               ? "var(--red-light)"
@@ -103,7 +103,7 @@ export default function PendingApprovalPage() {
           </p>
 
           {/* Info card */}
-          <div style={{
+          <div className="account-details" style={{
             background: "var(--bg-elevated)", border: "1px solid var(--border)",
             borderRadius: "var(--radius-lg)", padding: 20, marginBottom: 28, textAlign: "left",
           }}>
@@ -131,7 +131,7 @@ export default function PendingApprovalPage() {
           </div>
 
           {/* Contact / Support */}
-          <div style={{
+          <div className="support-box" style={{
             background: "var(--blue-light)", border: "1px solid rgba(59,130,246,0.15)",
             borderRadius: "var(--radius-lg)", padding: 16, marginBottom: 24, textAlign: "left",
           }}>

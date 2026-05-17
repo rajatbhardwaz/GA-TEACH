@@ -90,7 +90,7 @@ export default function RecordingsPage() {
     <DashboardLayout title="Lecture Recordings">
       <div className="page-enter">
         {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 28, gap: 16, flexWrap: "wrap" }}>
+        <div className="rec-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 28, gap: 16, flexWrap: "wrap" }}>
           <div>
             <h1 style={{ fontSize: 26, fontWeight: 700, marginBottom: 4 }}>Lecture Recordings</h1>
             <p style={{ fontSize: 14, color: "var(--text-secondary)" }}>{isTeacher ? "Upload and manage lecture recordings for your batches" : "Revise your lectures anytime, anywhere"}</p>
@@ -126,7 +126,7 @@ export default function RecordingsPage() {
         </div>
 
         {/* Search/Filters */}
-        <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
+        <div className="rec-filters" style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
           <div style={{ flex: 1, minWidth: 220, position: "relative" }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input type="text" className="input-field" placeholder="Search lectures, batches..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ paddingLeft: 40 }} />
@@ -161,7 +161,7 @@ export default function RecordingsPage() {
                       borderColor: selectedRecording?.id === rec.id ? "var(--blue)" : undefined,
                       background: selectedRecording?.id === rec.id ? "var(--blue-light)" : undefined }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 14, flex: 1, minWidth: 0 }}>
-                      <div style={{ width: 56, height: 56, borderRadius: "var(--radius-md)", background: "linear-gradient(135deg, #0a0a12, #16213e)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, position: "relative", overflow: "hidden" }}>
+                      <div className="rec-card-thumb" style={{ width: 56, height: 56, borderRadius: "var(--radius-md)", background: "linear-gradient(135deg, #0a0a12, #16213e)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, position: "relative", overflow: "hidden" }}>
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" strokeWidth="2"><polygon points="5,3 19,12 5,21"/></svg>
                         {rec.duration && <span style={{ position: "absolute", bottom: 2, right: 2, fontSize: 9, fontWeight: 600, color: "#fff", background: "rgba(0,0,0,0.7)", padding: "1px 4px", borderRadius: 3, fontFamily: "monospace" }}>{rec.duration}</span>}
                       </div>

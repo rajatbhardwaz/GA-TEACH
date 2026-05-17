@@ -98,12 +98,12 @@ export default function AttendancePage() {
         </div>
 
         {/* Filters */}
-        <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap", alignItems: "center" }}>
+        <div className="attendance-filters" style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap", alignItems: "center" }}>
           <div style={{ flex: 1, minWidth: 200, position: "relative" }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input type="text" placeholder="Search student name..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="input-field" style={{ paddingLeft: 36 }} />
           </div>
-          <div style={{ display: "flex", gap: 6 }}>
+          <div className="attendance-filter-btns" style={{ display: "flex", gap: 6 }}>
             {([
               { key: "all" as const, label: "All" },
               { key: "student" as const, label: "Students" },
@@ -125,11 +125,11 @@ export default function AttendancePage() {
           <div className="card empty-state"><h3>No attendance records</h3><p>{searchTerm ? "No matching students found." : "Attendance will be recorded automatically when students join live classes."}</p></div>
         ) : (
           <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr", padding: "14px 20px", background: "var(--bg-elevated)", borderBottom: "1px solid var(--border)", fontSize: 12, fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", gap: 12 }}>
+            <div className="attendance-table-header" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr", padding: "14px 20px", background: "var(--bg-elevated)", borderBottom: "1px solid var(--border)", fontSize: 12, fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", gap: 12 }}>
               <span>Student Name</span><span>Role</span><span>Last Attended</span><span>Lectures</span><span>Study Time</span>
             </div>
             {filteredAttendees.map((record, index) => (
-              <div key={record.id} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr", padding: "14px 20px", borderBottom: index < filteredAttendees.length - 1 ? "1px solid var(--border)" : "none", alignItems: "center", gap: 12, transition: "background var(--transition-fast)" }}
+              <div key={record.id} className="attendance-table-row" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr", padding: "14px 20px", borderBottom: index < filteredAttendees.length - 1 ? "1px solid var(--border)" : "none", alignItems: "center", gap: 12, transition: "background var(--transition-fast)" }}
                 onMouseEnter={e => { e.currentTarget.style.background = "var(--bg-hover)"; }}
                 onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -155,13 +155,13 @@ export default function AttendancePage() {
             <h2 style={{ fontSize: 18, fontWeight: 600, color: "var(--text-primary)", marginBottom: 16 }}>Detailed Session Log ({records.length})</h2>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {records.map(record => (
-                <div key={record.id} className="card" style={{ padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+                <div key={record.id} className="card session-log-card" style={{ padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: record.leaveTime ? "var(--text-muted)" : "var(--green)", boxShadow: record.leaveTime ? "none" : "0 0 8px rgba(34,197,94,0.4)", flexShrink: 0 }} />
                     <span style={{ fontSize: 14, fontWeight: 500, color: "var(--text-primary)" }}>{record.userName}</span>
                     <span className={`badge ${record.userRole === "teacher" ? "badge-teacher" : "badge-student"}`} style={{ fontSize: 10, padding: "2px 8px" }}>{record.userRole === "teacher" ? "Faculty" : "Student"}</span>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+                  <div className="session-log-meta" style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Joined: {formatDate(record.joinTime)}</span>
                     {record.leaveTime ? (
                       <>
