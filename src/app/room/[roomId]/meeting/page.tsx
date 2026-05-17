@@ -6,8 +6,21 @@ import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/firebase/config";
 import { useAuth } from "@/context/AuthContext";
 import { useProtectedRoute } from "@/hooks/useProtectedRoute";
-import JitsiMeeting from "@/components/JitsiMeeting";
+import dynamic from "next/dynamic";
 import Link from "next/link";
+
+// Dynamic import with SSR disabled — Jitsi needs browser APIs
+const JitsiMeeting = dynamic(() => import("@/components/JitsiMeeting"), {
+  ssr: false,
+  loading: () => (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", background: "#000" }}>
+      <div style={{ textAlign: "center" }}>
+        <div className="spinner" style={{ width: 48, height: 48, margin: "0 auto 16px" }} />
+        <p style={{ color: "#94a3b8", fontSize: 14 }}>Loading meeting interface...</p>
+      </div>
+    </div>
+  ),
+});
 
 interface Room {
   id: string;

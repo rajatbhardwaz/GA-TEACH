@@ -731,6 +731,11 @@ a:hover {
   .tabs-row::-webkit-scrollbar {
     display: none;
   }
+
+  /* Recording detail panel: collapse to full-width below card list */
+  .recording-detail-panel {
+    position: static !important;
+  }
 }
 
 /* Touch target sizing for mobile */

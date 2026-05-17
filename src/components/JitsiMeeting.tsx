@@ -48,19 +48,12 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
   useEffect(() => {
     if (!userData) return;
 
-    // Determine which Jitsi server to use based on configuration
-    const appId = process.env.NEXT_PUBLIC_JAAS_APP_ID;
-    const isJaaSConfigured =
-      appId &&
-      appId !== "YOUR_JAAS_APP_ID_HERE" &&
-      appId.startsWith("vpaas-magic-cookie-");
-
-    const domain = isJaaSConfigured ? "8x8.vc" : "meet.jit.si";
+    const domain = "meet.jit.si";
     const scriptSrc = `https://${domain}/external_api.js`;
 
     // Check if script is already loaded
     if (window.JitsiMeetExternalAPI) {
-      startMeeting();
+      initMeeting();
       return;
     }
 
@@ -68,17 +61,15 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
     const script = document.createElement("script");
     script.src = scriptSrc;
     script.async = true;
-    script.onload = () => startMeeting();
+    script.onload = () => initMeeting();
     document.head.appendChild(script);
 
     return () => {
-      // Cleanup: dispose API and record leave time
       if (apiRef.current) {
         apiRef.current.dispose();
         apiRef.current = null;
       }
       recordLeaveTime();
-      // Only remove script if it's still in the DOM
       if (script.parentNode) {
         script.parentNode.removeChild(script);
       }
@@ -86,90 +77,28 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userData]);
 
-  // Fetch a JWT from our server-side API, then init Jitsi with it
-  const startMeeting = async () => {
+  // Initialize meeting using free public Jitsi — no tokens, no login
+  const initMeeting = () => {
     if (!jitsiContainerRef.current || !userData) return;
     if (apiRef.current) return;
 
-    // Build the room name
-    const appId = process.env.NEXT_PUBLIC_JAAS_APP_ID;
-    const jitsiRoomSuffix = meetingSession
-      ? `classroom_${roomId}_${meetingSession}`
-      : `classroom_${roomId}`;
-
-    let jwtToken: string | null = null;
-    let jitsiRoomName = jitsiRoomSuffix;
-    let domain = "meet.jit.si"; // Default: free public Jitsi (never asks for login)
-
-    // Check if JaaS is ACTUALLY configured (not placeholder values)
-    const isJaaSConfigured =
-      appId &&
-      appId !== "YOUR_JAAS_APP_ID_HERE" &&
-      appId.startsWith("vpaas-magic-cookie-");
-
-    if (isJaaSConfigured) {
-      // JaaS mode: use JWT for authentication (no login prompt!)
-      domain = "8x8.vc";
-      jitsiRoomName = `${appId}/${jitsiRoomSuffix}`;
-
-      try {
-        const res = await fetch("/api/jaas-token", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            roomName: jitsiRoomSuffix,
-            user: {
-              id: userData.uid,
-              name: userData.name,
-              email: userData.email,
-              isModerator: isTeacher,
-            },
-          }),
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          jwtToken = data.token;
-          console.log("JaaS JWT token acquired — moderator:", isTeacher);
-        } else {
-          // Token generation failed — fall back to free Jitsi (no login!)
-          console.warn("JaaS token fetch failed, falling back to meet.jit.si");
-          domain = "meet.jit.si";
-          jitsiRoomName = jitsiRoomSuffix;
-          jwtToken = null;
-        }
-      } catch (err) {
-        console.error("Error fetching JaaS token:", err);
-        // Fall back to free Jitsi — never shows a login prompt
-        domain = "meet.jit.si";
-        jitsiRoomName = jitsiRoomSuffix;
-        jwtToken = null;
-      }
-    } else {
-      // JaaS not configured — use free public Jitsi (no login, no moderator gate)
-      console.log("JaaS not configured, using free meet.jit.si (no login required)");
-    }
-
-    initJitsi(domain, jitsiRoomName, jwtToken);
-  };
-
-  const initJitsi = (domain: string, jitsiRoomName: string, jwtToken: string | null) => {
-    if (!jitsiContainerRef.current || !userData) return;
-    if (apiRef.current) return;
+    // Build unique room name for this session
+    const jitsiRoomName = meetingSession
+      ? `GA_${roomId}_${meetingSession}`
+      : `GA_${roomId}`;
 
     const options: Record<string, unknown> = {
       roomName: jitsiRoomName,
       parentNode: jitsiContainerRef.current,
       width: "100%",
       height: "100%",
-      // Pass JWT if available — this auto-authenticates the user, no login!
-      ...(jwtToken ? { jwt: jwtToken } : {}),
       userInfo: {
-        displayName: userData.name,
+        displayName: `${userData.name} (${isTeacher ? "Teacher" : "Student"})`,
         email: userData.email,
       },
       configOverwrite: {
-        // --- Skip ALL login / pre-join / lobby screens ---
+        // --- Classroom/webinar optimized settings ---
+        // Skip pre-join and lobby — direct entry
         prejoinPageEnabled: false,
         prejoinConfig: { enabled: false },
         lobbyModeEnabled: false,
@@ -180,49 +109,49 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
         enableWelcomePage: false,
         enableClosePage: false,
 
-        // --- Disable ALL authentication-related features ---
-        enableAutomaticUrlCopy: false,
+        // --- No authentication needed ---
         hideLoginButton: true,
-        tokenAuthUrl: null,
-        authenticationUrl: null,
-        enableFeaturesBasedOnToken: !!jwtToken,
+        enableAutomaticUrlCopy: false,
 
-        // --- Guests join immediately without waiting for a moderator ---
-        enableUserRolesBasedOnToken: !!jwtToken,
-        moderatedRoomServiceUrl: null,
-
-        // --- Audio/video defaults ---
+        // --- Classroom audio/video defaults ---
+        // Teacher: camera ON, mic ON | Student: mic OFF, camera OFF
         startWithAudioMuted: !isTeacher,
-        startWithVideoMuted: false,
+        startWithVideoMuted: !isTeacher,
 
-        // --- Disable moderation features that trigger login ---
-        disableModeratorIndicator: !isTeacher,
+        // --- Classroom-style controls ---
+        disableModeratorIndicator: false,
         disableRemoteMute: !isTeacher,
-        remoteVideoMenu: { disableKick: !isTeacher, disableGrantModerator: !isTeacher },
+        remoteVideoMenu: {
+          disableKick: !isTeacher,
+          disableGrantModerator: !isTeacher,
+        },
         disableReactions: false,
 
-        // --- Disable notifications that clutter the UI ---
+        // --- Minimize distractions ---
         notifications: [],
-        disableJoinLeaveSounds: false,
-
-        // --- Security: disable lobby ---
-        security: { lobbyModeEnabled: false },
-
-        // --- Recording ---
+        disableJoinLeaveSounds: true,
         disableRecordAudioNotification: true,
 
-        // --- Make it feel smooth ---
+        // --- Performance & stability ---
         disableDeepLinking: true,
         disableThirdPartyRequests: true,
         disableInviteFunctions: true,
         doNotStoreRoom: true,
         enableNoisyMicDetection: false,
 
-        // --- P2P for better performance in small rooms ---
+        // --- P2P for small rooms, JVB auto for larger ---
         p2p: { enabled: true },
 
-        // --- Subject (room title shown in Jitsi UI) ---
+        // --- Classroom subject line ---
         subject: roomName,
+
+        // --- Last-N: optimizes bandwidth for 100+ participants ---
+        channelLastN: isTeacher ? -1 : 4,
+
+        // --- Tile view settings for large classrooms ---
+        maxFullResolutionParticipants: 2,
+        disableAudioLevels: true,
+        enableNoAudioDetection: true,
       },
       interfaceConfigOverwrite: {
         TOOLBAR_BUTTONS: [
@@ -234,14 +163,15 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
           "tileview",
           "fullscreen",
           "hangup",
+          "participants-pane",
           ...(isTeacher ? ["mute-everyone", "security"] : []),
         ],
         SHOW_JITSI_WATERMARK: false,
         SHOW_WATERMARK_FOR_GUESTS: false,
         SHOW_BRAND_WATERMARK: false,
         SHOW_POWERED_BY: false,
-        DEFAULT_BACKGROUND: "#1a1a2e",
-        DISABLE_JOIN_LEAVE_NOTIFICATIONS: false,
+        DEFAULT_BACKGROUND: "#0f0f23",
+        DISABLE_JOIN_LEAVE_NOTIFICATIONS: true,
         FILM_STRIP_MAX_HEIGHT: 120,
         MOBILE_APP_PROMO: false,
         HIDE_INVITE_MORE_HEADER: true,
@@ -252,10 +182,12 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
         AUTHENTICATION_ENABLE: false,
         TOOLBAR_ALWAYS_VISIBLE: true,
         SETTINGS_SECTIONS: ["devices", "language"],
+        // Optimize for large classrooms — filmstrip starts collapsed for students
+        VERTICAL_FILMSTRIP: true,
       },
     };
 
-    const api = new window.JitsiMeetExternalAPI(domain, options);
+    const api = new window.JitsiMeetExternalAPI("meet.jit.si", options);
     apiRef.current = api;
 
     // Record join time for attendance
@@ -267,30 +199,12 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
       updateDoc(doc(db, "rooms", roomId), { isActive: true }).catch(console.error);
     }
 
-    // Auto-dismiss any password/lobby/auth dialogs that might appear
-    api.addEventListener("passwordRequired", () => {
-      api.executeCommand("password", "");
-    });
-
-    // Auto-dismiss any authentication prompts
-    api.addEventListener("authenticationRequired", () => {
-      // Silently ignore — JWT should prevent this, but just in case
-    });
-
-    // Listen for conference joined to confirm successful connection
+    // Listen for conference joined
     api.addEventListener("videoConferenceJoined", () => {
       setIsLoaded(true);
-      // If teacher, disable lobby once in the room
-      if (isTeacher) {
-        try {
-          api.executeCommand("toggleLobby", false);
-        } catch {
-          // toggleLobby may not be available on all Jitsi versions
-        }
-      }
     });
 
-    // Listen for conference left event
+    // Listen for conference left / hangup
     api.addEventListener("readyToClose", () => {
       recordLeaveTime();
       if (isTeacher) {
@@ -300,7 +214,7 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
     });
 
     // Fallback: mark as loaded after a short delay
-    setTimeout(() => setIsLoaded(true), 3000);
+    setTimeout(() => setIsLoaded(true), 4000);
   };
 
   // Record when a participant joins
@@ -350,7 +264,6 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
   };
 
   const endMeeting = () => {
-    // Stop recording if active before ending meeting
     if (isRecording) {
       stopRecording();
     }
@@ -368,20 +281,17 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
 
   const startRecording = useCallback(async () => {
     try {
-      // Request screen capture with audio
       const displayStream = await navigator.mediaDevices.getDisplayMedia({
         video: { displaySurface: "browser" } as MediaTrackConstraints,
         audio: true,
       });
 
-      // Also try to capture microphone audio for teacher's voice
       let combinedStream = displayStream;
       try {
         const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
         const audioContext = new AudioContext();
         const destination = audioContext.createMediaStreamDestination();
 
-        // Mix display audio + mic audio
         displayStream.getAudioTracks().forEach((track) => {
           audioContext.createMediaStreamSource(new MediaStream([track])).connect(destination);
         });
@@ -389,19 +299,16 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
           audioContext.createMediaStreamSource(new MediaStream([track])).connect(destination);
         });
 
-        // Combine video from display + mixed audio
         combinedStream = new MediaStream([
           ...displayStream.getVideoTracks(),
           ...destination.stream.getAudioTracks(),
         ]);
 
-        // Cleanup mic stream when display stream ends
         displayStream.getVideoTracks()[0].addEventListener("ended", () => {
           micStream.getTracks().forEach((t) => t.stop());
           audioContext.close();
         });
       } catch {
-        // Mic access denied — record screen audio only, that's fine
         console.log("Mic access denied, recording screen audio only");
       }
 
@@ -424,25 +331,22 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
         saveRecording();
       };
 
-      // When user stops sharing via browser's native "Stop sharing" button
       combinedStream.getVideoTracks()[0].addEventListener("ended", () => {
         if (mediaRecorderRef.current?.state === "recording") {
           stopRecording();
         }
       });
 
-      mediaRecorder.start(1000); // Collect data every second
+      mediaRecorder.start(1000);
       mediaRecorderRef.current = mediaRecorder;
       setIsRecording(true);
       setRecordingTime(0);
 
-      // Start timer
       recordingTimerRef.current = setInterval(() => {
         setRecordingTime((prev) => prev + 1);
       }, 1000);
     } catch (err) {
       console.error("Failed to start recording:", err);
-      // User cancelled the screen picker dialog
     }
   }, []);
 
@@ -450,17 +354,12 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
       mediaRecorderRef.current.stop();
     }
-
-    // Stop all tracks
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
-
-    // Clear timer
     if (recordingTimerRef.current) {
       clearInterval(recordingTimerRef.current);
       recordingTimerRef.current = null;
     }
-
     setIsRecording(false);
   }, []);
 
@@ -485,13 +384,11 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
     setUploadStatus("uploading");
 
     try {
-      // Upload to Firebase Storage
       const storageRef = ref(storage, filePath);
       const uploadTask = uploadBytesResumable(storageRef, blob, {
         contentType: "video/webm",
       });
 
-      // Track upload progress
       uploadTask.on(
         "state_changed",
         (snapshot) => {
@@ -501,7 +398,7 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
         (error) => {
           console.error("Upload failed:", error);
           setUploadStatus("error");
-          // Fallback: download locally if upload fails
+          // Fallback: download locally
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.href = url;
@@ -516,20 +413,21 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
           }, 3000);
         },
         async () => {
-          // Upload complete — get the download URL
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
 
-          // Save recording to Firestore with the download link
+          // Save recording metadata to Firestore
           await addDoc(collection(db, "recordings"), {
             roomId,
             title: recordingTitle,
             link: downloadURL,
             uploadedBy: userData?.name || "Teacher",
             uploadedById: userData?.uid || "",
+            teacherName: userData?.name || "Teacher",
             duration: formatRecordingTime(recordingTime),
+            fileSize: blob.size,
             createdAt: new Date().toISOString(),
-            isLocalRecording: false,
             storagePath: filePath,
+            type: "screen-recording",
           });
 
           setUploadStatus("done");
@@ -566,7 +464,7 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
 
   return (
     <div className="flex flex-col" style={{ height: "100%", background: "#000" }}>
-      {/* Teacher controls toolbar - Google Meet style */}
+      {/* Teacher controls toolbar */}
       {isTeacher && isLoaded && (
         <div
           style={{
@@ -640,16 +538,7 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
             </button>
 
             <button onClick={muteAll} className="btn-secondary" style={{ padding: "8px 16px", fontSize: 13 }}>
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="1" y1="1" x2="23" y2="23" />
                 <path d="M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6" />
                 <path d="M17 16.95A7 7 0 015 12" />
@@ -659,16 +548,7 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
               Mute All
             </button>
             <button onClick={endMeeting} className="btn-danger" style={{ padding: "8px 16px", fontSize: 13 }}>
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M10.68 13.31a16 16 0 003.41 2.6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7 2 2 0 011.72 2v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91" />
                 <line x1="23" y1="1" x2="1" y2="23" />
               </svg>
@@ -702,7 +582,7 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
           }}
         >
           <div className="spinner" style={{ width: 48, height: 48 }} />
-          <p style={{ color: "var(--color-text-secondary)", fontSize: 14 }}>Connecting to meeting...</p>
+          <p style={{ color: "var(--color-text-secondary)", fontSize: 14 }}>Connecting to classroom...</p>
         </div>
       )}
 
@@ -752,14 +632,7 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
             </div>
           </div>
           {uploadStatus === "uploading" && (
-            <div
-              style={{
-                height: 4,
-                background: "var(--color-border)",
-                borderRadius: 2,
-                overflow: "hidden",
-              }}
-            >
+            <div style={{ height: 4, background: "var(--color-border)", borderRadius: 2, overflow: "hidden" }}>
               <div
                 style={{
                   height: "100%",
