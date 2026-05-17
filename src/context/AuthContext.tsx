@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from "react";
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -10,8 +10,13 @@ import {
   sendEmailVerification,
   setPersistence,
   browserLocalPersistence,
+  GoogleAuthProvider,
+  signInWithPopup,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
   User,
 } from "firebase/auth";
+import type { ConfirmationResult } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { auth, db } from "@/firebase/config";
 
@@ -33,6 +38,8 @@ export interface UserData {
   approvedAt?: string;       // ISO date when approved
   rejectedAt?: string;       // ISO date when rejected
   createdAt: string;
+  phone?: string;
+  authProvider?: "email" | "google" | "phone";
 }
 
 interface AuthContextType {
@@ -45,6 +52,11 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<void>;
   verifyEmail: () => Promise<void>;
   refreshUserData: () => Promise<void>;
+  // Social / phone auth
+  signInWithGoogle: () => Promise<{ isNewUser: boolean; displayName?: string; email?: string }>;
+  sendPhoneOTP: (phoneNumber: string, containerId: string) => Promise<void>;
+  confirmPhoneOTP: (code: string) => Promise<{ isNewUser: boolean }>;
+  completeProfile: (name: string, role: "teacher" | "student", phone?: string) => Promise<void>;
   // Convenience flags
   isAdmin: boolean;
   isApprovedTeacher: boolean;
@@ -57,10 +69,15 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
+const googleProvider = new GoogleAuthProvider();
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const confirmationResultRef = useRef<ConfirmationResult | null>(null);
+  const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
 
   // Set persistence to local on mount
   useEffect(() => {
@@ -166,6 +183,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       role: actualRole,
       approvalStatus,
       createdAt: new Date().toISOString(),
+      authProvider: "email",
     };
     await setDoc(doc(db, "users", result.user.uid), newUser);
     setUserData(newUser);
@@ -177,6 +195,88 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Non-blocking: if verification email fails, user can still proceed
       console.warn("Email verification send failed — user can verify later");
     }
+  }, []);
+
+  // Google sign-in — returns whether the user is new (no Firestore profile)
+  const signInWithGoogleFn = useCallback(async () => {
+    const result = await signInWithPopup(auth, googleProvider);
+    const firebaseUser = result.user;
+    const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
+    if (userDoc.exists()) {
+      const data = userDoc.data() as UserData;
+      if (!data.approvalStatus) {
+        data.approvalStatus = data.role === "teacher" ? "pending" : "approved";
+      }
+      if (data.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase() && data.role !== "admin") {
+        data.role = "admin";
+        data.approvalStatus = "approved";
+        await setDoc(doc(db, "users", firebaseUser.uid), { role: "admin", approvalStatus: "approved" }, { merge: true }).catch(console.error);
+      }
+      setUserData(data);
+      return { isNewUser: false };
+    }
+    return {
+      isNewUser: true,
+      displayName: firebaseUser.displayName || undefined,
+      email: firebaseUser.email || undefined,
+    };
+  }, []);
+
+  // Phone auth — send OTP
+  const sendPhoneOTP = useCallback(async (phoneNumber: string, containerId: string) => {
+    // Clean up previous verifier
+    if (recaptchaVerifierRef.current) {
+      try { recaptchaVerifierRef.current.clear(); } catch { /* ignore */ }
+    }
+    const verifier = new RecaptchaVerifier(auth, containerId, { size: "invisible" });
+    recaptchaVerifierRef.current = verifier;
+    const confirmation = await signInWithPhoneNumber(auth, phoneNumber, verifier);
+    confirmationResultRef.current = confirmation;
+  }, []);
+
+  // Phone auth — verify OTP
+  const confirmPhoneOTP = useCallback(async (code: string) => {
+    if (!confirmationResultRef.current) throw new Error("No OTP sent yet");
+    const result = await confirmationResultRef.current.confirm(code);
+    const userDoc = await getDoc(doc(db, "users", result.user.uid));
+    if (userDoc.exists()) {
+      const data = userDoc.data() as UserData;
+      if (!data.approvalStatus) {
+        data.approvalStatus = data.role === "teacher" ? "pending" : "approved";
+      }
+      setUserData(data);
+      return { isNewUser: false };
+    }
+    return { isNewUser: true };
+  }, []);
+
+  // Complete profile for social/phone auth new users
+  const completeProfile = useCallback(async (name: string, role: "teacher" | "student", phone?: string) => {
+    const currentUser = auth.currentUser;
+    if (!currentUser) throw new Error("No authenticated user");
+
+    const email = currentUser.email || "";
+    const isAdminEmail = email && email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+    const actualRole: UserData["role"] = isAdminEmail ? "admin" : role;
+    const approvalStatus: ApprovalStatus = isAdminEmail
+      ? "approved"
+      : role === "student"
+        ? "approved"
+        : "pending";
+
+    const newUser: UserData = {
+      uid: currentUser.uid,
+      email,
+      name,
+      role: actualRole,
+      approvalStatus,
+      createdAt: new Date().toISOString(),
+      authProvider: phone ? "phone" : "google",
+      ...(phone ? { phone } : {}),
+    };
+
+    await setDoc(doc(db, "users", currentUser.uid), newUser);
+    setUserData(newUser);
   }, []);
 
   // Logout
@@ -208,6 +308,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider value={{
       user, userData, loading, login, signup, logout, resetPassword, verifyEmail, refreshUserData,
+      signInWithGoogle: signInWithGoogleFn, sendPhoneOTP, confirmPhoneOTP, completeProfile,
       isAdmin, isApprovedTeacher, isPendingTeacher, isRejectedTeacher, isStudent, hasFullAccess,
     }}>
       {children}

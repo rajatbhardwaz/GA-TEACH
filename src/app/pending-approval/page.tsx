@@ -114,8 +114,8 @@ export default function PendingApprovalPage() {
                 <span style={{ color: "var(--text-primary)", fontWeight: 500 }}>{userData.name}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
-                <span style={{ color: "var(--text-muted)" }}>Email</span>
-                <span style={{ color: "var(--text-primary)", fontWeight: 500 }}>{userData.email}</span>
+                <span style={{ color: "var(--text-muted)" }}>{userData.phone && !userData.email ? "Phone" : "Email"}</span>
+                <span style={{ color: "var(--text-primary)", fontWeight: 500 }}>{userData.email || userData.phone || "—"}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
                 <span style={{ color: "var(--text-muted)" }}>Role</span>

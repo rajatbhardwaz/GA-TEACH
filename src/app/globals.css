@@ -931,3 +931,143 @@ html, body { overflow-x: hidden; max-width: 100vw; }
   .page-content { max-width: 1400px; }
   .page-content-wide { max-width: 1600px; margin: 0 auto; }
 }
+
+/* =============================================
+   SOCIAL AUTH — Google, Phone, OTP
+   ============================================= */
+
+/* Divider with centered text */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 20px 0;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-light);
+}
+.auth-divider span {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+/* Social auth buttons — shared base */
+.btn-social {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 20px;
+  font-size: 13.5px;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: 1px solid var(--border-light);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  position: relative;
+  overflow: hidden;
+}
+.btn-social::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  border-radius: inherit;
+}
+.btn-social:hover::before { opacity: 1; }
+.btn-social:hover {
+  border-color: rgba(255,255,255,0.15);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+.btn-social:active { transform: translateY(0); }
+.btn-social:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* Google button accent */
+.btn-social-google::before {
+  background: linear-gradient(135deg, rgba(66,133,244,0.06), rgba(234,67,53,0.04));
+}
+.btn-social-google:hover {
+  border-color: rgba(66,133,244,0.3);
+  box-shadow: 0 4px 14px rgba(66,133,244,0.12);
+}
+
+/* Phone button accent */
+.btn-social-phone {
+  color: var(--text-secondary);
+}
+.btn-social-phone::before {
+  background: linear-gradient(135deg, rgba(34,197,94,0.06), rgba(34,197,94,0.02));
+}
+.btn-social-phone:hover {
+  color: var(--text-primary);
+  border-color: rgba(34,197,94,0.3);
+  box-shadow: 0 4px 14px rgba(34,197,94,0.1);
+}
+
+/* Phone input group with prefix */
+.phone-input-group {
+  display: flex;
+  align-items: stretch;
+}
+.phone-prefix {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  background: var(--bg-active);
+  border: 1px solid var(--border-light);
+  border-right: none;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  user-select: none;
+  letter-spacing: 0.02em;
+}
+
+/* OTP input container */
+.otp-container {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+.otp-input {
+  width: 44px;
+  height: 52px;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-md);
+  outline: none;
+  transition: all var(--transition-fast);
+  caret-color: var(--blue);
+}
+.otp-input:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px var(--blue-light);
+  background: var(--bg-surface);
+}
+.otp-input::selection {
+  background: var(--blue-light);
+}
+
+/* Responsive OTP on small screens */
+@media (max-width: 400px) {
+  .otp-container { gap: 5px; }
+  .otp-input { width: 38px; height: 46px; font-size: 18px; }
+}
