@@ -6,6 +6,10 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
+  sendPasswordResetEmail,
+  sendEmailVerification,
+  setPersistence,
+  browserLocalPersistence,
   User,
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
@@ -27,6 +31,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, name: string, role: "teacher" | "student") => Promise<void>;
   logout: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  verifyEmail: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -35,6 +41,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Set persistence to local on mount
+  useEffect(() => {
+    setPersistence(auth, browserLocalPersistence).catch(console.error);
+  }, []);
 
   // Fetch user profile from Firestore with error handling and timeout
   const fetchUserData = useCallback(async (firebaseUser: User) => {
@@ -104,6 +115,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
     await setDoc(doc(db, "users", result.user.uid), newUser);
     setUserData(newUser);
+
+    // Send email verification
+    try {
+      await sendEmailVerification(result.user);
+    } catch {
+      // Non-blocking: if verification email fails, user can still proceed
+      console.warn("Email verification send failed — user can verify later");
+    }
   }, []);
 
   // Logout
@@ -112,8 +131,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUserData(null);
   }, []);
 
+  // Reset password
+  const resetPassword = useCallback(async (email: string) => {
+    await sendPasswordResetEmail(auth, email);
+  }, []);
+
+  // Verify email
+  const verifyEmail = useCallback(async () => {
+    if (auth.currentUser) {
+      await sendEmailVerification(auth.currentUser);
+    }
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, userData, loading, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, userData, loading, login, signup, logout, resetPassword, verifyEmail }}>
       {children}
     </AuthContext.Provider>
   );
