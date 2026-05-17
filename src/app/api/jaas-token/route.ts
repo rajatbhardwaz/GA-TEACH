@@ -20,20 +20,25 @@ export async function POST(request: Request) {
 
     const now = Math.floor(Date.now() / 1000);
 
+    const isModerator = !!user?.isModerator;
+
     const payload = {
       aud: "jitsi",
       iss: "chat",
       sub: appId,
-      room: roomName || "*",
-      exp: now + 3600, // Token valid for 1 hour
-      nbf: now - 10, // Allow 10 seconds clock skew
+      room: "*",
+      exp: now + 7200, // Token valid for 2 hours
+      nbf: now - 30, // Allow 30 seconds clock skew
       context: {
         user: {
           id: user?.id || uuidv4(),
           name: user?.name || "Participant",
           email: user?.email || "",
           avatar: "",
-          moderator: user?.isModerator ? "true" : "false",
+          moderator: isModerator,
+          // "affiliation" tells JaaS to grant owner/moderator rights
+          // This is the KEY field that prevents the 8x8 login prompt
+          affiliation: isModerator ? "owner" : "member",
         },
         features: {
           recording: "false",

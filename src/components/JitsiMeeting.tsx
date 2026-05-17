@@ -48,7 +48,14 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
   useEffect(() => {
     if (!userData) return;
 
-    const domain = "8x8.vc";
+    // Determine which Jitsi server to use based on configuration
+    const appId = process.env.NEXT_PUBLIC_JAAS_APP_ID;
+    const isJaaSConfigured =
+      appId &&
+      appId !== "YOUR_JAAS_APP_ID_HERE" &&
+      appId.startsWith("vpaas-magic-cookie-");
+
+    const domain = isJaaSConfigured ? "8x8.vc" : "meet.jit.si";
     const scriptSrc = `https://${domain}/external_api.js`;
 
     // Check if script is already loaded
@@ -84,18 +91,23 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
     if (!jitsiContainerRef.current || !userData) return;
     if (apiRef.current) return;
 
-    // Build the room name: on JaaS, room names are prefixed with the appId
+    // Build the room name
     const appId = process.env.NEXT_PUBLIC_JAAS_APP_ID;
     const jitsiRoomSuffix = meetingSession
       ? `classroom_${roomId}_${meetingSession}`
       : `classroom_${roomId}`;
 
-    // If JaaS is configured, fetch a JWT token from our API route
     let jwtToken: string | null = null;
     let jitsiRoomName = jitsiRoomSuffix;
-    let domain = "8x8.vc";
+    let domain = "meet.jit.si"; // Default: free public Jitsi (never asks for login)
 
-    if (appId) {
+    // Check if JaaS is ACTUALLY configured (not placeholder values)
+    const isJaaSConfigured =
+      appId &&
+      appId !== "YOUR_JAAS_APP_ID_HERE" &&
+      appId.startsWith("vpaas-magic-cookie-");
+
+    if (isJaaSConfigured) {
       // JaaS mode: use JWT for authentication (no login prompt!)
       domain = "8x8.vc";
       jitsiRoomName = `${appId}/${jitsiRoomSuffix}`;
@@ -118,12 +130,24 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
         if (res.ok) {
           const data = await res.json();
           jwtToken = data.token;
+          console.log("JaaS JWT token acquired — moderator:", isTeacher);
         } else {
-          console.error("Failed to fetch JaaS token, falling back to anonymous mode");
+          // Token generation failed — fall back to free Jitsi (no login!)
+          console.warn("JaaS token fetch failed, falling back to meet.jit.si");
+          domain = "meet.jit.si";
+          jitsiRoomName = jitsiRoomSuffix;
+          jwtToken = null;
         }
       } catch (err) {
         console.error("Error fetching JaaS token:", err);
+        // Fall back to free Jitsi — never shows a login prompt
+        domain = "meet.jit.si";
+        jitsiRoomName = jitsiRoomSuffix;
+        jwtToken = null;
       }
+    } else {
+      // JaaS not configured — use free public Jitsi (no login, no moderator gate)
+      console.log("JaaS not configured, using free meet.jit.si (no login required)");
     }
 
     initJitsi(domain, jitsiRoomName, jwtToken);
