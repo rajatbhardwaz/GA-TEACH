@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 import SplashWrapper from "@/components/SplashWrapper";
 
 const inter = Inter({
@@ -24,9 +25,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} h-full`}>
       <body className="min-h-full flex flex-col antialiased">
-        <AuthProvider>
-          <SplashWrapper>{children}</SplashWrapper>
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <SplashWrapper>{children}</SplashWrapper>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
