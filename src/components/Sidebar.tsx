@@ -11,11 +11,11 @@ const mainNav = [
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
   },
   {
-    label: "Classes", href: "/dashboard",
+    label: "My Batches", href: "/dashboard",
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>,
   },
   {
-    label: "Recordings", href: "/recordings",
+    label: "Lecture Recordings", href: "/recordings",
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16"/></svg>,
   },
 ];
@@ -37,7 +37,6 @@ export default function Sidebar() {
   const { userData, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Close sidebar on route change (mobile)
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
   const handleLogout = async () => {
@@ -54,13 +53,13 @@ export default function Sidebar() {
     <>
       {/* Logo area */}
       <div className="sidebar-logo">
-        <img src="/logo.png" alt="GA TEACH" style={{ width: 30, height: 30, borderRadius: 8, objectFit: "cover" }} />
-        <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "0.04em" }}>GA TEACH</span>
+        <img src="/logo.png" alt="Glorious Amplification" style={{ width: 30, height: 30, borderRadius: 8, objectFit: "cover" }} />
+        <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "0.02em" }}>Glorious Amplification</span>
       </div>
 
       {/* Main nav */}
       <nav className="sidebar-nav">
-        <div className="sidebar-section-label">Main</div>
+        <div className="sidebar-section-label">Learning</div>
         {mainNav.map((item) => (
           <Link
             key={item.label}
@@ -100,7 +99,7 @@ export default function Sidebar() {
             </div>
             <div style={{ minWidth: 0 }}>
               <p style={{ fontSize: 13, fontWeight: 500, color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{userData.name}</p>
-              <p style={{ fontSize: 11, color: "var(--text-muted)" }}>{userData.role}</p>
+              <p style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "capitalize" }}>{userData.role === "teacher" ? "Faculty" : "Student"}</p>
             </div>
           </div>
         </div>
@@ -110,17 +109,12 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Desktop sidebar */}
       <aside className={`sidebar ${mobileOpen ? "open" : ""}`}>
         {sidebarContent}
       </aside>
-
-      {/* Mobile overlay */}
       {mobileOpen && (
         <div className="sidebar-overlay show" onClick={() => setMobileOpen(false)} />
       )}
-
-      {/* Mobile hamburger trigger — exposed for parent to call */}
       <button
         className="hamburger-btn"
         onClick={() => setMobileOpen(true)}

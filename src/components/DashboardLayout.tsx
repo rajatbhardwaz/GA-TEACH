@@ -31,7 +31,7 @@ export default function DashboardLayout({ children, title, wide }: DashboardLayo
             {/* Search */}
             <div className="topbar-search">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <input type="text" placeholder="Search..." />
+              <input type="text" placeholder="Search batches, lectures..." />
             </div>
 
             {/* Notification bell */}
@@ -51,7 +51,7 @@ export default function DashboardLayout({ children, title, wide }: DashboardLayo
                   {userData.name.split(" ")[0]}
                 </span>
                 <span className={`badge ${userData.role === "teacher" ? "badge-teacher" : "badge-student"}`} style={{ fontSize: 9, padding: "2px 6px" }}>
-                  {userData.role}
+                  {userData.role === "teacher" ? "Faculty" : "Student"}
                 </span>
               </div>
             )}
