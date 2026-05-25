@@ -24,7 +24,7 @@ const JitsiMeeting = dynamic(() => import("@/components/JitsiMeeting"), {
 interface Room {
   id: string; roomName: string; subject: string; teacherName: string;
   teacherId: string; roomCode: string; createdAt: string;
-  participants: string[]; isActive: boolean;
+  participants: string[]; isActive: boolean; currentSession?: string;
 }
 
 export default function MeetingPage() {
@@ -116,9 +116,12 @@ export default function MeetingPage() {
               <div className="meeting-prejoin-actions" style={{ display: "flex", gap: 12 }}>
                 <button className="btn-primary" style={{ flex: 1, padding: "14px 24px", fontSize: 15 }} onClick={async () => {
                   if (isTeacher) {
-                    const sessionId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-                    await updateDoc(doc(db, "rooms", roomId), { currentSession: sessionId });
+                    const sessionId = room.isActive && room.currentSession
+                      ? room.currentSession
+                      : Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+                    await updateDoc(doc(db, "rooms", roomId), { currentSession: sessionId, isActive: true });
                     setMeetingSession(sessionId);
+                    setRoom((prev) => prev ? { ...prev, currentSession: sessionId, isActive: true } : prev);
                   } else {
                     const freshRoom = await getDoc(doc(db, "rooms", roomId));
                     const session = freshRoom.data()?.currentSession || roomId;

@@ -27,6 +27,9 @@ interface JitsiAPI {
   getNumberOfParticipants: () => number;
 }
 
+const DEFAULT_JITSI_DOMAIN = "meet.jit.si";
+const JITSI_DOMAIN = process.env.NEXT_PUBLIC_JITSI_DOMAIN?.trim() || DEFAULT_JITSI_DOMAIN;
+
 export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSession }: JitsiMeetingProps) {
   const jitsiContainerRef = useRef<HTMLDivElement>(null);
   const apiRef = useRef<JitsiAPI | null>(null);
@@ -48,8 +51,7 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
   useEffect(() => {
     if (!userData) return;
 
-    const domain = "meet.jit.si";
-    const scriptSrc = `https://${domain}/external_api.js`;
+    const scriptSrc = `https://${JITSI_DOMAIN}/external_api.js`;
 
     // Check if script is already loaded
     if (window.JitsiMeetExternalAPI) {
@@ -187,7 +189,7 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
       },
     };
 
-    const api = new window.JitsiMeetExternalAPI("meet.jit.si", options);
+    const api = new window.JitsiMeetExternalAPI(JITSI_DOMAIN, options);
     apiRef.current = api;
 
     // Record join time for attendance
