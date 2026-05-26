@@ -5,13 +5,16 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
 export default function PendingApprovalPage() {
-  const { user, userData, loading, logout, isPendingTeacher, isRejectedTeacher, hasFullAccess } = useAuth();
+  const { user, userData, loading, logout, hasFullAccess } = useAuth();
   const router = useRouter();
+  const isRejected = userData?.approvalStatus === "rejected";
+  const isPending = userData?.approvalStatus === "pending";
+  const roleLabel = userData?.role === "teacher" ? "Faculty" : "Student";
 
   useEffect(() => {
     if (loading) return;
     if (!user) { router.push("/login"); return; }
-    // If user has full access (approved/admin/student), go to dashboard
+    // If user has full access, go to dashboard
     if (userData && hasFullAccess) { router.push("/dashboard"); return; }
   }, [user, userData, loading, hasFullAccess, router]);
 
@@ -54,12 +57,12 @@ export default function PendingApprovalPage() {
           {/* Status Icon */}
           <div className="pending-status-icon" style={{
             width: 72, height: 72, borderRadius: "50%", margin: "0 auto 24px",
-            background: isRejectedTeacher
+            background: isRejected
               ? "var(--red-light)"
               : "var(--yellow-light)",
             display: "flex", alignItems: "center", justifyContent: "center",
           }}>
-            {isRejectedTeacher ? (
+            {isRejected ? (
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--red)" strokeWidth="2" strokeLinecap="round">
                 <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
               </svg>
@@ -72,34 +75,34 @@ export default function PendingApprovalPage() {
 
           {/* Title */}
           <h1 style={{ fontSize: 22, fontWeight: 700, color: "var(--text-primary)", marginBottom: 8, letterSpacing: "-0.02em" }}>
-            {isRejectedTeacher
+            {isRejected
               ? "Application Not Approved"
               : "Account Under Review"}
           </h1>
 
           {/* Status badge */}
           <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 14px", borderRadius: "var(--radius-full)", marginBottom: 20,
-            background: isRejectedTeacher ? "var(--red-light)" : "var(--yellow-light)",
-            border: isRejectedTeacher ? "1px solid rgba(239,68,68,0.2)" : "1px solid rgba(234,179,8,0.2)",
+            background: isRejected ? "var(--red-light)" : "var(--yellow-light)",
+            border: isRejected ? "1px solid rgba(239,68,68,0.2)" : "1px solid rgba(234,179,8,0.2)",
           }}>
             <div style={{
               width: 6, height: 6, borderRadius: "50%",
-              background: isRejectedTeacher ? "var(--red)" : "var(--yellow)",
-              ...(isPendingTeacher ? { animation: "pulse-dot 2s ease-in-out infinite" } : {}),
+              background: isRejected ? "var(--red)" : "var(--yellow)",
+              ...(isPending ? { animation: "pulse-dot 2s ease-in-out infinite" } : {}),
             }} />
             <span style={{
               fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px",
-              color: isRejectedTeacher ? "var(--red)" : "var(--yellow)",
+              color: isRejected ? "var(--red)" : "var(--yellow)",
             }}>
-              {isRejectedTeacher ? "Rejected" : "Pending Approval"}
+              {isRejected ? "Rejected" : "Pending Approval"}
             </span>
           </div>
 
           {/* Description */}
           <p style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.7, marginBottom: 32, maxWidth: 380, margin: "0 auto 32px" }}>
-            {isRejectedTeacher
-              ? "Your teacher account application has been reviewed and was not approved. If you believe this is an error, please contact the administrator."
-              : "Your teacher account is currently under admin review. You will receive access to the full teacher dashboard once the administrator approves your application."}
+            {isRejected
+              ? "Your account application has been reviewed and was not approved. If you believe this is an error, please contact the administrator."
+              : "Your account is currently under admin review. You will receive access to the platform once the administrator approves your application."}
           </p>
 
           {/* Info card */}
@@ -119,7 +122,7 @@ export default function PendingApprovalPage() {
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
                 <span style={{ color: "var(--text-muted)" }}>Role</span>
-                <span className="badge badge-teacher" style={{ fontSize: 10, padding: "2px 8px" }}>Faculty</span>
+                <span className={`badge ${userData.role === "teacher" ? "badge-teacher" : "badge-student"}`} style={{ fontSize: 10, padding: "2px 8px" }}>{roleLabel}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
                 <span style={{ color: "var(--text-muted)" }}>Applied</span>

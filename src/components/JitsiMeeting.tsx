@@ -28,13 +28,30 @@ interface JitsiAPI {
 }
 
 const DEFAULT_JITSI_DOMAIN = "meet.jit.si";
-const JITSI_DOMAIN = process.env.NEXT_PUBLIC_JITSI_DOMAIN?.trim() || DEFAULT_JITSI_DOMAIN;
+const JITSI_DOMAIN = (process.env.NEXT_PUBLIC_JITSI_DOMAIN?.trim() || DEFAULT_JITSI_DOMAIN)
+  .replace(/^https?:\/\//, "")
+  .replace(/\/$/, "");
+const USE_PUBLIC_JITSI_DIRECT = JITSI_DOMAIN === DEFAULT_JITSI_DOMAIN;
+
+const buildJitsiRoomName = (roomId: string, meetingSession: string) =>
+  meetingSession ? `GA_${roomId}_${meetingSession}` : `GA_${roomId}`;
+
+const buildDirectJitsiUrl = (roomName: string, displayName: string) => {
+  const url = new URL(`https://${JITSI_DOMAIN}/${encodeURIComponent(roomName)}`);
+  url.hash = [
+    "config.prejoinPageEnabled=false",
+    "config.disableDeepLinking=true",
+    `userInfo.displayName=${encodeURIComponent(displayName)}`,
+  ].join("&");
+  return url.toString();
+};
 
 export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSession }: JitsiMeetingProps) {
   const jitsiContainerRef = useRef<HTMLDivElement>(null);
   const apiRef = useRef<JitsiAPI | null>(null);
   const { userData } = useAuth();
   const [isLoaded, setIsLoaded] = useState(false);
+  const [hasLaunchedPublicRoom, setHasLaunchedPublicRoom] = useState(false);
   const joinTimeRef = useRef<string>("");
 
   // --- Screen Recording State ---
@@ -50,6 +67,7 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
 
   useEffect(() => {
     if (!userData) return;
+    if (USE_PUBLIC_JITSI_DIRECT) return;
 
     const scriptSrc = `https://${JITSI_DOMAIN}/external_api.js`;
 
@@ -79,15 +97,12 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userData]);
 
-  // Initialize meeting using free public Jitsi — no tokens, no login
-  const initMeeting = () => {
+  // Initialize embedded meeting for a dedicated Jitsi/JaaS domain.
+  function initMeeting() {
     if (!jitsiContainerRef.current || !userData) return;
     if (apiRef.current) return;
 
-    // Build unique room name for this session
-    const jitsiRoomName = meetingSession
-      ? `GA_${roomId}_${meetingSession}`
-      : `GA_${roomId}`;
+    const jitsiRoomName = buildJitsiRoomName(roomId, meetingSession);
 
     const options: Record<string, unknown> = {
       roomName: jitsiRoomName,
@@ -136,13 +151,13 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
 
         // --- Performance & stability ---
         disableDeepLinking: true,
-        disableThirdPartyRequests: true,
         disableInviteFunctions: true,
         doNotStoreRoom: true,
         enableNoisyMicDetection: false,
 
-        // --- P2P for small rooms, JVB auto for larger ---
-        p2p: { enabled: true },
+        // Classroom sessions are more stable through the bridge than switching
+        // between peer-to-peer and bridge modes mid-call.
+        p2p: { enabled: false },
 
         // --- Classroom subject line ---
         subject: roomName,
@@ -217,10 +232,10 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
 
     // Fallback: mark as loaded after a short delay
     setTimeout(() => setIsLoaded(true), 4000);
-  };
+  }
 
   // Record when a participant joins
-  const recordJoinTime = async () => {
+  async function recordJoinTime() {
     if (!userData) return;
     try {
       await addDoc(collection(db, "attendance"), {
@@ -235,10 +250,10 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
     } catch (err) {
       console.error("Failed to record join time:", err);
     }
-  };
+  }
 
   // Record when a participant leaves
-  const recordLeaveTime = async () => {
+  async function recordLeaveTime() {
     if (!userData || !joinTimeRef.current) return;
     try {
       const leaveTime = new Date().toISOString();
@@ -258,18 +273,42 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
     } catch (err) {
       console.error("Failed to record leave time:", err);
     }
-  };
+  }
 
   // Teacher controls
   const muteAll = () => {
     apiRef.current?.executeCommand("muteEveryone");
   };
 
-  const endMeeting = () => {
-    if (isRecording) {
-      stopRecording();
+  const openPublicJitsiRoom = () => {
+    if (!userData) return;
+
+    joinTimeRef.current = new Date().toISOString();
+    recordJoinTime();
+
+    if (isTeacher) {
+      updateDoc(doc(db, "rooms", roomId), { isActive: true }).catch(console.error);
     }
-    apiRef.current?.executeCommand("hangup");
+
+    const displayName = `${userData.name} (${isTeacher ? "Teacher" : "Student"})`;
+    const opened = window.open(
+      buildDirectJitsiUrl(buildJitsiRoomName(roomId, meetingSession), displayName),
+      "_blank",
+      "noopener,noreferrer"
+    );
+    if (!opened) {
+      window.location.href = buildDirectJitsiUrl(buildJitsiRoomName(roomId, meetingSession), displayName);
+      return;
+    }
+    setHasLaunchedPublicRoom(true);
+  };
+
+  const endPublicJitsiRoom = () => {
+    recordLeaveTime();
+    if (isTeacher) {
+      updateDoc(doc(db, "rooms", roomId), { isActive: false }).catch(console.error);
+    }
+    window.location.href = "/dashboard";
   };
 
   // --- Screen Recording ---
@@ -364,6 +403,13 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
     }
     setIsRecording(false);
   }, []);
+
+  const endMeeting = () => {
+    if (isRecording) {
+      stopRecording();
+    }
+    apiRef.current?.executeCommand("hangup");
+  };
 
   const saveRecording = useCallback(async () => {
     if (recordedChunksRef.current.length === 0) return;
@@ -463,6 +509,78 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
       }
     };
   }, []);
+
+  if (USE_PUBLIC_JITSI_DIRECT) {
+    return (
+      <div
+        className="flex flex-col"
+        style={{
+          minHeight: "100%",
+          background: "#05060a",
+          color: "#fff",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 24,
+          textAlign: "center",
+          gap: 20,
+        }}
+      >
+        <div
+          style={{
+            width: 76,
+            height: 76,
+            borderRadius: "50%",
+            background: "linear-gradient(135deg, #1a73e8, #34a853)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 18px 44px rgba(26, 115, 232, 0.28)",
+          }}
+        >
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
+            <path d="M23 7l-7 5 7 5V7z" />
+            <rect x="1" y="5" width="15" height="14" rx="2" />
+          </svg>
+        </div>
+        <div style={{ maxWidth: 520 }}>
+          <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 10 }}>
+            {hasLaunchedPublicRoom ? "Classroom stream is open" : "Open stable classroom stream"}
+          </h2>
+          <p style={{ color: "rgba(255,255,255,0.72)", fontSize: 15, lineHeight: 1.6 }}>
+            {hasLaunchedPublicRoom
+              ? "Keep this tab open while the live class runs. End the class here when the session is finished."
+              : "This app is using public meet.jit.si. Public embedded calls can stop after a few minutes, so this class will open directly on Jitsi for a continuous session."}
+          </p>
+        </div>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
+          <button
+            onClick={openPublicJitsiRoom}
+            className="btn-primary"
+            style={{ padding: "14px 24px", fontSize: 15, display: "inline-flex", alignItems: "center", gap: 10 }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+              <polyline points="15,3 21,3 21,9" />
+              <line x1="10" y1="14" x2="21" y2="3" />
+            </svg>
+            {hasLaunchedPublicRoom ? "Reopen Jitsi Classroom" : "Launch Jitsi Classroom"}
+          </button>
+          {hasLaunchedPublicRoom && (
+            <button
+              onClick={endPublicJitsiRoom}
+              className="btn-danger"
+              style={{ padding: "14px 24px", fontSize: 15, display: "inline-flex", alignItems: "center", gap: 10 }}
+            >
+              End Class
+            </button>
+          )}
+        </div>
+        <p style={{ color: "rgba(255,255,255,0.44)", fontSize: 12, maxWidth: 460 }}>
+          For fully embedded long classes, set `NEXT_PUBLIC_JITSI_DOMAIN` to a dedicated Jitsi or JaaS domain.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col" style={{ height: "100%", background: "#000" }}>

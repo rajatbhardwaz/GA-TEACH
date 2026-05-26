@@ -24,7 +24,7 @@ import { auth, db } from "@/firebase/config";
 // Configurable via NEXT_PUBLIC_ADMIN_EMAIL env variable
 const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin.gloriousamplification@gmail.com";
 
-// Approval statuses for teacher accounts
+// Approval statuses for non-admin accounts
 export type ApprovalStatus = "pending" | "approved" | "rejected";
 
 // User data shape stored in Firestore
@@ -63,7 +63,7 @@ interface AuthContextType {
   isPendingTeacher: boolean;
   isRejectedTeacher: boolean;
   isStudent: boolean;
-  /** True if the user has full access (admin, approved teacher, or student) */
+  /** True if the user has full access (admin or approved user) */
   hasFullAccess: boolean;
 }
 
@@ -172,9 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const actualRole: UserData["role"] = isAdminEmail ? "admin" : role;
     const approvalStatus: ApprovalStatus = isAdminEmail
       ? "approved"  // admin bypasses approval
-      : role === "student"
-        ? "approved"  // students get immediate access
-        : "pending";  // teachers need admin approval
+      : "pending";  // teachers and students need admin approval
 
     const newUser: UserData = {
       uid: result.user.uid,
@@ -260,9 +258,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const actualRole: UserData["role"] = isAdminEmail ? "admin" : role;
     const approvalStatus: ApprovalStatus = isAdminEmail
       ? "approved"
-      : role === "student"
-        ? "approved"
-        : "pending";
+      : "pending";
 
     const newUser: UserData = {
       uid: currentUser.uid,
@@ -303,7 +299,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isPendingTeacher = userData?.role === "teacher" && userData?.approvalStatus === "pending";
   const isRejectedTeacher = userData?.role === "teacher" && userData?.approvalStatus === "rejected";
   const isStudent = userData?.role === "student";
-  const hasFullAccess = isAdmin || isApprovedTeacher || isStudent;
+  const hasFullAccess = Boolean(isAdmin || userData?.approvalStatus === "approved");
 
   return (
     <AuthContext.Provider value={{
