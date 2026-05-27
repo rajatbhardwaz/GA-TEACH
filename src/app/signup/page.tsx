@@ -33,7 +33,7 @@ export default function SignupPage() {
     setLoading(true);
     try {
       await signup(email, password, name, role);
-      router.push(role === "teacher" ? "/pending-approval" : "/dashboard");
+      router.push("/pending-approval");
     } catch (err: unknown) {
       const firebaseError = err as { code?: string };
       if (firebaseError.code === "auth/email-already-in-use") setError("An account with this email already exists.");
@@ -50,7 +50,7 @@ export default function SignupPage() {
       if (result.isNewUser) {
         const displayName = name.trim() || result.displayName || "User";
         await completeProfile(displayName, role);
-        router.push(role === "teacher" ? "/pending-approval" : "/dashboard");
+        router.push("/pending-approval");
       } else {
         // Already has a profile — just redirect
         router.push("/dashboard");
@@ -97,7 +97,7 @@ export default function SignupPage() {
         const fullNumber = "+91" + phoneNumber.replace(/\D/g, "").slice(-10);
         await completeProfile(name.trim(), role, fullNumber);
       }
-      router.push(role === "teacher" ? "/pending-approval" : "/dashboard");
+      router.push(result.isNewUser ? "/pending-approval" : "/dashboard");
     } catch (err: unknown) {
       const firebaseError = err as { code?: string };
       if (firebaseError.code === "auth/invalid-verification-code") setError("Invalid code. Please check and try again.");
@@ -180,6 +180,11 @@ export default function SignupPage() {
             {role === "teacher" && (
               <div style={{ padding: "10px 14px", borderRadius: "var(--radius-md)", background: "var(--yellow-light)", border: "1px solid rgba(234,179,8,0.15)", fontSize: 12.5, color: "var(--text-secondary)", lineHeight: 1.6 }}>
                 <span style={{ fontWeight: 600, color: "var(--yellow)" }}>Note:</span> Faculty accounts require admin approval before accessing teacher features. You&apos;ll be notified once approved.
+              </div>
+            )}
+            {role === "student" && (
+              <div style={{ padding: "10px 14px", borderRadius: "var(--radius-md)", background: "var(--yellow-light)", border: "1px solid rgba(234,179,8,0.15)", fontSize: 12.5, color: "var(--text-secondary)", lineHeight: 1.6 }}>
+                <span style={{ fontWeight: 600, color: "var(--yellow)" }}>Note:</span> Student accounts require admin approval before accessing classes.
               </div>
             )}
           </div>

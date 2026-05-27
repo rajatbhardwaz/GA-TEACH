@@ -112,7 +112,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await completeProfile(profileName.trim(), profileRole, profilePhone || undefined);
-      router.push(profileRole === "teacher" ? "/pending-approval" : "/dashboard");
+      router.push("/pending-approval");
     } catch {
       setError("Failed to complete profile. Please try again.");
     } finally { setLoading(false); }
@@ -312,6 +312,11 @@ export default function LoginPage() {
                 {profileRole === "teacher" && (
                   <div style={{ padding: "10px 14px", borderRadius: "var(--radius-md)", background: "var(--yellow-light)", border: "1px solid rgba(234,179,8,0.15)", fontSize: 12.5, color: "var(--text-secondary)", lineHeight: 1.6 }}>
                     <span style={{ fontWeight: 600, color: "var(--yellow)" }}>Note:</span> Faculty accounts require admin approval before accessing teacher features.
+                  </div>
+                )}
+                {profileRole === "student" && (
+                  <div style={{ padding: "10px 14px", borderRadius: "var(--radius-md)", background: "var(--yellow-light)", border: "1px solid rgba(234,179,8,0.15)", fontSize: 12.5, color: "var(--text-secondary)", lineHeight: 1.6 }}>
+                    <span style={{ fontWeight: 600, color: "var(--yellow)" }}>Note:</span> Student accounts require admin approval before accessing classes.
                   </div>
                 )}
                 <button type="submit" disabled={loading} className="btn-primary" style={{ width: "100%", marginTop: 4, padding: "12px 24px" }}>

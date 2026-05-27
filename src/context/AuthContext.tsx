@@ -63,6 +63,9 @@ interface AuthContextType {
   isPendingTeacher: boolean;
   isRejectedTeacher: boolean;
   isStudent: boolean;
+  isApprovedStudent: boolean;
+  isPendingStudent: boolean;
+  isRejectedStudent: boolean;
   /** True if the user has full access (admin or approved user) */
   hasFullAccess: boolean;
 }
@@ -98,11 +101,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (userDoc.exists()) {
         const data = userDoc.data() as UserData;
         // Backward compatibility: if approvalStatus is missing, set defaults
+        // Both teachers and students require admin approval
         if (!data.approvalStatus) {
-          if (data.role === "teacher") {
-            data.approvalStatus = "pending";
-          } else {
+          if (data.role === "admin") {
             data.approvalStatus = "approved";
+          } else {
+            data.approvalStatus = "pending";
           }
         }
         // Auto-detect admin by email
@@ -203,7 +207,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (userDoc.exists()) {
       const data = userDoc.data() as UserData;
       if (!data.approvalStatus) {
-        data.approvalStatus = data.role === "teacher" ? "pending" : "approved";
+        data.approvalStatus = data.role === "admin" ? "approved" : "pending";
       }
       if (data.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase() && data.role !== "admin") {
         data.role = "admin";
@@ -240,7 +244,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (userDoc.exists()) {
       const data = userDoc.data() as UserData;
       if (!data.approvalStatus) {
-        data.approvalStatus = data.role === "teacher" ? "pending" : "approved";
+        data.approvalStatus = data.role === "admin" ? "approved" : "pending";
       }
       setUserData(data);
       return { isNewUser: false };
@@ -299,13 +303,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isPendingTeacher = userData?.role === "teacher" && userData?.approvalStatus === "pending";
   const isRejectedTeacher = userData?.role === "teacher" && userData?.approvalStatus === "rejected";
   const isStudent = userData?.role === "student";
+  const isApprovedStudent = userData?.role === "student" && userData?.approvalStatus === "approved";
+  const isPendingStudent = userData?.role === "student" && userData?.approvalStatus === "pending";
+  const isRejectedStudent = userData?.role === "student" && userData?.approvalStatus === "rejected";
   const hasFullAccess = Boolean(isAdmin || userData?.approvalStatus === "approved");
 
   return (
     <AuthContext.Provider value={{
       user, userData, loading, login, signup, logout, resetPassword, verifyEmail, refreshUserData,
       signInWithGoogle: signInWithGoogleFn, sendPhoneOTP, confirmPhoneOTP, completeProfile,
-      isAdmin, isApprovedTeacher, isPendingTeacher, isRejectedTeacher, isStudent, hasFullAccess,
+      isAdmin, isApprovedTeacher, isPendingTeacher, isRejectedTeacher,
+      isStudent, isApprovedStudent, isPendingStudent, isRejectedStudent,
+      hasFullAccess,
     }}>
       {children}
     </AuthContext.Provider>

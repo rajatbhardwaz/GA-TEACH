@@ -36,11 +36,22 @@ const USE_PUBLIC_JITSI_DIRECT = JITSI_DOMAIN === DEFAULT_JITSI_DOMAIN;
 const buildJitsiRoomName = (roomId: string, meetingSession: string) =>
   meetingSession ? `GA_${roomId}_${meetingSession}` : `GA_${roomId}`;
 
-const buildDirectJitsiUrl = (roomName: string, displayName: string) => {
+const buildDirectJitsiUrl = (roomName: string, displayName: string, isTeacher: boolean) => {
   const url = new URL(`https://${JITSI_DOMAIN}/${encodeURIComponent(roomName)}`);
   url.hash = [
     "config.prejoinPageEnabled=false",
     "config.disableDeepLinking=true",
+    // Enable collaborative whiteboard (Excalidraw)
+    "config.whiteboard.enabled=true",
+    "config.whiteboard.collabServerBaseUrl=https://odr.jitsi.net",
+    // Classroom defaults
+    `config.startWithAudioMuted=${!isTeacher}`,
+    `config.startWithVideoMuted=${!isTeacher}`,
+    "config.disableInviteFunctions=true",
+    "config.hideConferenceSubject=false",
+    `config.subject=${encodeURIComponent(roomName)}`,
+    // Toolbar with whiteboard
+    `config.toolbarButtons=["microphone","camera","desktop","chat","raisehand","whiteboard","tileview","fullscreen","hangup","participants-pane"${isTeacher ? ',"mute-everyone","security"' : ""}]`,
     `userInfo.displayName=${encodeURIComponent(displayName)}`,
   ].join("&");
   return url.toString();
@@ -169,6 +180,12 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
         maxFullResolutionParticipants: 2,
         disableAudioLevels: true,
         enableNoAudioDetection: true,
+
+        // --- Whiteboard (Excalidraw) ---
+        whiteboard: {
+          enabled: true,
+          collabServerBaseUrl: "https://odr.jitsi.net",
+        },
       },
       interfaceConfigOverwrite: {
         TOOLBAR_BUTTONS: [
@@ -177,6 +194,7 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
           "desktop",
           "chat",
           "raisehand",
+          "whiteboard",
           "tileview",
           "fullscreen",
           "hangup",
@@ -292,12 +310,12 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
 
     const displayName = `${userData.name} (${isTeacher ? "Teacher" : "Student"})`;
     const opened = window.open(
-      buildDirectJitsiUrl(buildJitsiRoomName(roomId, meetingSession), displayName),
+      buildDirectJitsiUrl(buildJitsiRoomName(roomId, meetingSession), displayName, isTeacher),
       "_blank",
       "noopener,noreferrer"
     );
     if (!opened) {
-      window.location.href = buildDirectJitsiUrl(buildJitsiRoomName(roomId, meetingSession), displayName);
+      window.location.href = buildDirectJitsiUrl(buildJitsiRoomName(roomId, meetingSession), displayName, isTeacher);
       return;
     }
     setHasLaunchedPublicRoom(true);
