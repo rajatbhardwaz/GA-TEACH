@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { doc, updateDoc, addDoc, collection } from "firebase/firestore";
+import { doc, updateDoc, addDoc, collection, query, where, onSnapshot, getDocs } from "firebase/firestore";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { db, storage } from "@/firebase/config";
 import { useAuth } from "@/context/AuthContext";
@@ -64,6 +64,62 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasLaunchedPublicRoom, setHasLaunchedPublicRoom] = useState(false);
   const joinTimeRef = useRef<string>("");
+
+  // --- Join Request Notifications (Teacher side) ---
+  interface JoinRequest {
+    id: string;
+    studentName: string;
+    studentEmail: string;
+    studentId: string;
+    status: string;
+    requestedAt: string;
+  }
+  const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
+  const [dismissedRequests, setDismissedRequests] = useState<Set<string>>(new Set());
+
+  // Listen for pending join requests (teacher only)
+  useEffect(() => {
+    if (!isTeacher || !roomId) return;
+    const q = query(
+      collection(db, "joinRequests"),
+      where("roomId", "==", roomId),
+      where("status", "==", "pending")
+    );
+    const unsub = onSnapshot(q, (snapshot) => {
+      const requests = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as JoinRequest));
+      requests.sort((a, b) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime());
+      setJoinRequests(requests);
+    });
+    return () => unsub();
+  }, [isTeacher, roomId]);
+
+  const handleAcceptJoinRequest = async (requestId: string) => {
+    try {
+      await updateDoc(doc(db, "joinRequests", requestId), {
+        status: "accepted",
+        respondedAt: new Date().toISOString(),
+      });
+      setDismissedRequests(prev => new Set(prev).add(requestId));
+    } catch (err) { console.error("Failed to accept request:", err); }
+  };
+
+  const handleDeclineJoinRequest = async (requestId: string) => {
+    try {
+      await updateDoc(doc(db, "joinRequests", requestId), {
+        status: "declined",
+        respondedAt: new Date().toISOString(),
+      });
+      setDismissedRequests(prev => new Set(prev).add(requestId));
+    } catch (err) { console.error("Failed to decline request:", err); }
+  };
+
+  const handleAcceptAll = async () => {
+    for (const req of joinRequests) {
+      await handleAcceptJoinRequest(req.id);
+    }
+  };
+
+  const visibleRequests = joinRequests.filter(r => !dismissedRequests.has(r.id));
 
   // --- Screen Recording State ---
   const [isRecording, setIsRecording] = useState(false);
@@ -596,6 +652,9 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
         <p style={{ color: "rgba(255,255,255,0.44)", fontSize: 12, maxWidth: 460 }}>
           For fully embedded long classes, set `NEXT_PUBLIC_JITSI_DOMAIN` to a dedicated Jitsi or JaaS domain.
         </p>
+
+        {/* Teacher: Join Request Notifications */}
+        {isTeacher && <JoinRequestsPanel requests={visibleRequests} onAccept={handleAcceptJoinRequest} onDecline={handleDeclineJoinRequest} onAcceptAll={handleAcceptAll} />}
       </div>
     );
   }
@@ -783,6 +842,128 @@ export default function JitsiMeeting({ roomId, roomName, isTeacher, meetingSessi
             </div>
           )}
         </div>
+      )}
+
+      {/* Teacher: Join Request Notifications */}
+      {isTeacher && <JoinRequestsPanel requests={visibleRequests} onAccept={handleAcceptJoinRequest} onDecline={handleDeclineJoinRequest} onAcceptAll={handleAcceptAll} />}
+    </div>
+  );
+}
+
+// ─── Join Requests Notification Panel (Teacher Side) ───
+interface JoinRequestsPanelProps {
+  requests: { id: string; studentName: string; studentEmail: string; requestedAt: string }[];
+  onAccept: (id: string) => void;
+  onDecline: (id: string) => void;
+  onAcceptAll: () => void;
+}
+
+function JoinRequestsPanel({ requests, onAccept, onDecline, onAcceptAll }: JoinRequestsPanelProps) {
+  if (requests.length === 0) return null;
+
+  return (
+    <div style={{
+      position: "fixed", bottom: 24, right: 24, zIndex: 1100,
+      display: "flex", flexDirection: "column", gap: 10, maxWidth: 360, width: "100%",
+    }}>
+      {/* Header bar */}
+      <div style={{
+        background: "var(--bg-card, #1a1a2e)", border: "1px solid var(--border, #2a2a3e)",
+        borderRadius: 12, padding: "12px 16px",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{
+            width: 28, height: 28, borderRadius: "50%", background: "var(--yellow-light, rgba(234,179,8,0.15))",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--yellow, #eab308)" strokeWidth="2">
+              <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
+            </svg>
+          </div>
+          <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary, #fff)" }}>
+            {requests.length} student{requests.length > 1 ? "s" : ""} waiting
+          </span>
+        </div>
+        {requests.length > 1 && (
+          <button
+            onClick={onAcceptAll}
+            style={{
+              padding: "5px 12px", fontSize: 11, fontWeight: 600, borderRadius: 6,
+              border: "1px solid rgba(34,197,94,0.3)", background: "rgba(34,197,94,0.1)",
+              color: "var(--green, #22c55e)", cursor: "pointer", transition: "all 0.2s",
+            }}
+          >
+            Accept All
+          </button>
+        )}
+      </div>
+
+      {/* Individual request cards */}
+      {requests.slice(0, 5).map((req) => (
+        <div key={req.id} style={{
+          background: "var(--bg-card, #1a1a2e)", border: "1px solid var(--border, #2a2a3e)",
+          borderRadius: 12, padding: "14px 16px",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+          animation: "slide-in-right 0.3s ease-out",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+            <div style={{
+              width: 38, height: 38, borderRadius: "50%",
+              background: "linear-gradient(135deg, #10b981, #06b6d4)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 14, fontWeight: 700, color: "#fff", flexShrink: 0,
+            }}>
+              {req.studentName.charAt(0).toUpperCase()}
+            </div>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <p style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary, #fff)", marginBottom: 2 }}>
+                {req.studentName}
+              </p>
+              <p style={{ fontSize: 11, color: "var(--text-muted, #888)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                wants to join the class
+              </p>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              onClick={() => onAccept(req.id)}
+              style={{
+                flex: 1, padding: "8px 14px", fontSize: 12, fontWeight: 600, borderRadius: 8,
+                border: "none", background: "var(--green, #22c55e)", color: "#fff",
+                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                transition: "all 0.2s",
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <polyline points="20,6 9,17 4,12"/>
+              </svg>
+              Accept
+            </button>
+            <button
+              onClick={() => onDecline(req.id)}
+              style={{
+                flex: 1, padding: "8px 14px", fontSize: 12, fontWeight: 600, borderRadius: 8,
+                border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.1)",
+                color: "var(--red, #ef4444)", cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                transition: "all 0.2s",
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+              Decline
+            </button>
+          </div>
+        </div>
+      ))}
+
+      {requests.length > 5 && (
+        <p style={{ fontSize: 11, color: "var(--text-muted, #888)", textAlign: "center" }}>
+          +{requests.length - 5} more waiting...
+        </p>
       )}
     </div>
   );

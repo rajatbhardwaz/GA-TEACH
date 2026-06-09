@@ -1,16 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 
+const APP_DOWNLOAD_URL = "/downloads/glorious-amplification.apk";
+
 export default function Home() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => { setMounted(true); }, []);
   useEffect(() => { if (!loading && user) router.push("/dashboard"); }, [user, loading, router]);
 
   if (loading || user) {
@@ -30,13 +30,14 @@ export default function Home() {
           <span className="landing-nav-brand">Glorious Amplification</span>
         </div>
         <div className="landing-nav-actions">
+          <a href={APP_DOWNLOAD_URL} download className="btn-secondary landing-nav-btn">Download App</a>
           <Link href="/login"><button className="btn-secondary landing-nav-btn">Sign In</button></Link>
           <Link href="/signup"><button className="btn-primary landing-nav-btn">Start Learning</button></Link>
         </div>
       </nav>
 
       {/* Hero */}
-      <main className="landing-hero" style={{ opacity: mounted ? 1 : 0, transform: mounted ? "translateY(0)" : "translateY(16px)", transition: "opacity 600ms ease-out, transform 600ms ease-out" }}>
+      <main className="landing-hero page-enter">
         {/* Badge */}
         <div className="landing-badge">
           <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--green)", animation: "pulse-dot 2s ease-in-out infinite" }} />
@@ -52,6 +53,17 @@ export default function Home() {
           Live coaching for Government Exams, Spoken English, Psychology & more.
           HD video lectures, real-time doubt solving, attendance tracking, and recorded sessions — all in one platform.
         </p>
+
+        <div className="landing-app-download">
+          <div className="landing-app-copy">
+            <span className="landing-app-kicker">Android app available</span>
+            <strong>Learn from your phone with the Glorious Amplification app.</strong>
+          </div>
+          <a href={APP_DOWNLOAD_URL} download className="btn-primary landing-app-btn" aria-label="Download Glorious Amplification Android app">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+            Download App
+          </a>
+        </div>
 
         <div className="landing-cta-group">
           <Link href="/signup">
@@ -69,7 +81,7 @@ export default function Home() {
         </div>
 
         {/* Feature cards */}
-        <div className="landing-features" style={{ opacity: mounted ? 1 : 0, transform: mounted ? "translateY(0)" : "translateY(20px)", transition: "opacity 700ms ease-out 300ms, transform 700ms ease-out 300ms" }}>
+        <div className="landing-features">
           {[
             { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" strokeWidth="1.8"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>, title: "Live Coaching", desc: "HD live classes with real-time doubt solving and faculty interaction" },
             { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="1.8"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17,11 19,13 23,9"/></svg>, title: "Smart Attendance", desc: "Auto-tracked attendance for every lecture and practice session" },

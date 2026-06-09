@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc, addDoc, deleteDoc, collection, onSnapshot } from "firebase/firestore";
 import { db } from "@/firebase/config";
 import { useAuth } from "@/context/AuthContext";
 import { useProtectedRoute } from "@/hooks/useProtectedRoute";
@@ -38,6 +38,11 @@ export default function MeetingPage() {
   const [joined, setJoined] = useState(false);
   const [meetingSession, setMeetingSession] = useState<string>("");
 
+  // Join request state (student lobby)
+  const [joinRequestId, setJoinRequestId] = useState<string | null>(null);
+  const [joinRequestStatus, setJoinRequestStatus] = useState<"idle" | "pending" | "accepted" | "declined">("idle");
+  const joinRequestIdRef = useRef<string | null>(null);
+
   const fetchRoom = useCallback(async () => {
     try { const roomDoc = await getDoc(doc(db, "rooms", roomId)); if (roomDoc.exists()) setRoom({ id: roomDoc.id, ...roomDoc.data() } as Room); } catch (err) { console.error(err); }
     finally { setLoadingRoom(false); }
@@ -47,6 +52,75 @@ export default function MeetingPage() {
 
   const isTeacher = (userData?.role === "teacher" || userData?.role === "admin") && userData?.uid === room?.teacherId;
 
+  // Listen for join request status changes (student side)
+  useEffect(() => {
+    if (!joinRequestId) return;
+    const unsub = onSnapshot(doc(db, "joinRequests", joinRequestId), (snap) => {
+      if (!snap.exists()) return;
+      const data = snap.data();
+      if (data.status === "accepted") {
+        setJoinRequestStatus("accepted");
+        // Auto-join the meeting
+        const session = data.meetingSession || roomId;
+        setMeetingSession(session);
+        setTimeout(() => setJoined(true), 800); // Brief delay for UX
+      } else if (data.status === "declined") {
+        setJoinRequestStatus("declined");
+      }
+    });
+    return () => unsub();
+  }, [joinRequestId, roomId]);
+
+  // Cleanup pending request on unmount
+  useEffect(() => {
+    joinRequestIdRef.current = joinRequestId;
+  }, [joinRequestId]);
+
+  useEffect(() => {
+    return () => {
+      if (joinRequestIdRef.current) {
+        deleteDoc(doc(db, "joinRequests", joinRequestIdRef.current)).catch(console.error);
+      }
+    };
+  }, []);
+
+  // Student: send join request
+  const handleStudentJoinRequest = async () => {
+    if (!userData || !room) return;
+    try {
+      const freshRoom = await getDoc(doc(db, "rooms", roomId));
+      const session = freshRoom.data()?.currentSession || roomId;
+      const requestRef = await addDoc(collection(db, "joinRequests"), {
+        roomId,
+        meetingSession: session,
+        studentId: userData.uid,
+        studentName: userData.name,
+        studentEmail: userData.email || "",
+        status: "pending",
+        requestedAt: new Date().toISOString(),
+      });
+      setJoinRequestId(requestRef.id);
+      setJoinRequestStatus("pending");
+    } catch (err) {
+      console.error("Failed to send join request:", err);
+    }
+  };
+
+  // Student: cancel request
+  const handleCancelRequest = async () => {
+    if (joinRequestId) {
+      await deleteDoc(doc(db, "joinRequests", joinRequestId)).catch(console.error);
+      setJoinRequestId(null);
+      setJoinRequestStatus("idle");
+    }
+  };
+
+  // Student: retry after decline
+  const handleRetryRequest = () => {
+    setJoinRequestId(null);
+    setJoinRequestStatus("idle");
+  };
+
   if (authLoading || loadingRoom) {
     return (<div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "var(--bg-base)", gap: 16 }}><div className="spinner" style={{ width: 48, height: 48 }} /><p style={{ color: "var(--text-secondary)", fontSize: 14 }}>Preparing your classroom...</p></div>);
   }
@@ -55,7 +129,112 @@ export default function MeetingPage() {
     return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg-base)" }}><div className="empty-state"><h3>Batch not found</h3><p>This classroom doesn&apos;t exist or has been removed.</p><button className="btn-primary" style={{ marginTop: 16 }} onClick={() => router.push("/dashboard")}>Back to Dashboard</button></div></div>);
   }
 
-  // Pre-join lobby
+  // ── Student waiting screen (after sending join request) ──
+  if (!isTeacher && joinRequestStatus !== "idle") {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, background: "var(--bg-base)", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%)", top: -200, right: -200, pointerEvents: "none" }} />
+        <div style={{ position: "absolute", width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(168,85,247,0.04) 0%, transparent 60%)", bottom: -150, left: -100, pointerEvents: "none" }} />
+
+        <div className="page-enter" style={{ width: "100%", maxWidth: 460, position: "relative", zIndex: 1, textAlign: "center" }}>
+          <div className="card" style={{ padding: 40 }}>
+            {/* Status icon */}
+            <div style={{
+              width: 80, height: 80, borderRadius: "50%", margin: "0 auto 24px",
+              background: joinRequestStatus === "declined" ? "var(--red-light)" : "linear-gradient(135deg, rgba(59,130,246,0.12), rgba(168,85,247,0.12))",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              border: joinRequestStatus === "declined" ? "2px solid rgba(239,68,68,0.2)" : "2px solid rgba(59,130,246,0.15)",
+            }}>
+              {joinRequestStatus === "pending" && (
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" strokeWidth="2" style={{ animation: "spin 3s linear infinite" }}>
+                  <circle cx="12" cy="12" r="10" strokeDasharray="60" strokeDashoffset="15" />
+                </svg>
+              )}
+              {joinRequestStatus === "accepted" && (
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="2.5">
+                  <polyline points="20,6 9,17 4,12" />
+                </svg>
+              )}
+              {joinRequestStatus === "declined" && (
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--red)" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+                </svg>
+              )}
+            </div>
+
+            {/* Title */}
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: "var(--text-primary)", marginBottom: 8 }}>
+              {joinRequestStatus === "pending" && "Waiting for Teacher"}
+              {joinRequestStatus === "accepted" && "Request Accepted!"}
+              {joinRequestStatus === "declined" && "Request Declined"}
+            </h1>
+
+            {/* Status badge */}
+            {joinRequestStatus === "pending" && (
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 16px",
+                borderRadius: "var(--radius-full)", background: "var(--blue-light)",
+                border: "1px solid rgba(59,130,246,0.15)", marginBottom: 20,
+              }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--blue)", animation: "pulse-dot 2s ease-in-out infinite" }} />
+                <span style={{ fontSize: 12, fontWeight: 600, color: "var(--blue)", textTransform: "uppercase", letterSpacing: "0.5px" }}>Knock sent</span>
+              </div>
+            )}
+
+            {/* Description */}
+            <p style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.7, marginBottom: 28, maxWidth: 360, margin: "0 auto 28px" }}>
+              {joinRequestStatus === "pending" && "Your request to join has been sent to the teacher. Please wait while they review your request."}
+              {joinRequestStatus === "accepted" && "The teacher has approved your entry. Connecting you to the classroom..."}
+              {joinRequestStatus === "declined" && "The teacher has declined your request to join this session. You can try again or go back."}
+            </p>
+
+            {/* Class info */}
+            <div style={{
+              background: "var(--bg-elevated)", border: "1px solid var(--border)",
+              borderRadius: "var(--radius-lg)", padding: 16, marginBottom: 24, textAlign: "left",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 40, height: 40, borderRadius: "var(--radius-md)", background: "var(--blue-light)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" strokeWidth="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                </div>
+                <div>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>{room.roomName}</p>
+                  <p style={{ fontSize: 12, color: "var(--text-muted)" }}>{room.subject} • {room.teacherName}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+              {joinRequestStatus === "pending" && (
+                <button className="btn-secondary" onClick={handleCancelRequest} style={{ padding: "10px 24px" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  Cancel Request
+                </button>
+              )}
+              {joinRequestStatus === "declined" && (
+                <>
+                  <button className="btn-primary" onClick={handleRetryRequest} style={{ padding: "10px 24px" }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+                    Try Again
+                  </button>
+                  <button className="btn-secondary" onClick={() => router.push(`/room/${roomId}`)} style={{ padding: "10px 24px" }}>
+                    Go Back
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+
+          <p style={{ fontSize: 12, textAlign: "center", marginTop: 16, color: "var(--text-muted)" }}>
+            Glorious Amplification — Live Classroom
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Pre-join lobby ──
   if (!joined) {
     return (
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, background: "var(--bg-base)", position: "relative", overflow: "hidden" }}>
@@ -113,6 +292,13 @@ export default function MeetingPage() {
                 </div>
               </div>
 
+              {/* Student info note */}
+              {!isTeacher && (
+                <div style={{ padding: "10px 14px", borderRadius: "var(--radius-md)", background: "var(--yellow-light)", border: "1px solid rgba(234,179,8,0.15)", fontSize: 12.5, color: "var(--text-secondary)", lineHeight: 1.6, marginBottom: 20 }}>
+                  <span style={{ fontWeight: 600, color: "var(--yellow)" }}>Note:</span> Your request to join will be sent to the teacher for approval.
+                </div>
+              )}
+
               <div className="meeting-prejoin-actions" style={{ display: "flex", gap: 12 }}>
                 <button className="btn-primary" style={{ flex: 1, padding: "14px 24px", fontSize: 15 }} onClick={async () => {
                   if (isTeacher) {
@@ -122,15 +308,14 @@ export default function MeetingPage() {
                     await updateDoc(doc(db, "rooms", roomId), { currentSession: sessionId, isActive: true });
                     setMeetingSession(sessionId);
                     setRoom((prev) => prev ? { ...prev, currentSession: sessionId, isActive: true } : prev);
+                    setJoined(true);
                   } else {
-                    const freshRoom = await getDoc(doc(db, "rooms", roomId));
-                    const session = freshRoom.data()?.currentSession || roomId;
-                    setMeetingSession(session);
+                    // Student: send join request instead of directly joining
+                    handleStudentJoinRequest();
                   }
-                  setJoined(true);
                 }}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
-                  {isTeacher ? (room.isActive ? "Rejoin Classroom" : "Start Live Class") : "Enter Classroom"}
+                  {isTeacher ? (room.isActive ? "Rejoin Classroom" : "Start Live Class") : "Request to Join"}
                 </button>
                 <button className="btn-secondary" style={{ padding: "14px 24px" }} onClick={() => router.push(`/room/${roomId}`)}>Cancel</button>
               </div>
@@ -141,7 +326,7 @@ export default function MeetingPage() {
     );
   }
 
-  // Active classroom view
+  // ── Active classroom view ──
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "#000", overflow: "hidden" }}>
       <div className="meeting-topbar" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 16px", background: "var(--bg-surface)", borderBottom: "1px solid var(--border)", zIndex: 20, flexShrink: 0 }}>
