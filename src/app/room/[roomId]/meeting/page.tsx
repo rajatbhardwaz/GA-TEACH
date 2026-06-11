@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { doc, getDoc, updateDoc, addDoc, deleteDoc, collection, onSnapshot } from "firebase/firestore";
 import { db } from "@/firebase/config";
@@ -43,14 +43,39 @@ export default function MeetingPage() {
   const [joinRequestStatus, setJoinRequestStatus] = useState<"idle" | "pending" | "accepted" | "declined">("idle");
   const joinRequestIdRef = useRef<string | null>(null);
 
-  const fetchRoom = useCallback(async () => {
-    try { const roomDoc = await getDoc(doc(db, "rooms", roomId)); if (roomDoc.exists()) setRoom({ id: roomDoc.id, ...roomDoc.data() } as Room); } catch (err) { console.error(err); }
-    finally { setLoadingRoom(false); }
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      doc(db, "rooms", roomId),
+      (roomDoc) => {
+        if (roomDoc.exists()) setRoom({ id: roomDoc.id, ...roomDoc.data() } as Room);
+        setLoadingRoom(false);
+      },
+      (err) => {
+        console.error(err);
+        setLoadingRoom(false);
+      }
+    );
+
+    return () => unsubscribe();
   }, [roomId]);
 
-  useEffect(() => { fetchRoom(); }, [fetchRoom]);
-
   const isTeacher = (userData?.role === "teacher" || userData?.role === "admin") && userData?.uid === room?.teacherId;
+
+  useEffect(() => {
+    if (!joined || !roomId) return;
+    const unsub = onSnapshot(doc(db, "rooms", roomId), (snap) => {
+      if (!snap.exists()) {
+        router.push("/dashboard");
+        return;
+      }
+      const nextRoom = { id: snap.id, ...snap.data() } as Room;
+      setRoom(nextRoom);
+      if (!nextRoom.isActive) {
+        router.push("/dashboard");
+      }
+    });
+    return () => unsub();
+  }, [joined, roomId, router]);
 
   // Listen for join request status changes (student side)
   useEffect(() => {
@@ -338,7 +363,17 @@ export default function MeetingPage() {
           <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{room.subject}</span>
           <span className="badge badge-live" style={{ marginLeft: 8 }}>Live Class</span>
         </div>
-        <button onClick={() => router.push("/dashboard")} className="btn-danger" style={{ padding: "6px 16px", fontSize: 13 }}>
+        <button onClick={async () => {
+          if (isTeacher) {
+            await updateDoc(doc(db, "rooms", roomId), {
+              isActive: false,
+              currentSession: null,
+              endedAt: new Date().toISOString(),
+              endedBy: userData?.uid || null,
+            }).catch(console.error);
+          }
+          router.push("/dashboard");
+        }} className="btn-danger" style={{ padding: "6px 16px", fontSize: 13 }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
           End Class
         </button>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, updateDoc, onSnapshot } from "firebase/firestore";
 import { db } from "@/firebase/config";
 import { useAuth } from "@/context/AuthContext";
 import { useProtectedRoute } from "@/hooks/useProtectedRoute";
@@ -9,29 +9,34 @@ import DashboardLayout from "@/components/DashboardLayout";
 import CreateRoomModal from "@/components/CreateRoomModal";
 import JoinRoomModal from "@/components/JoinRoomModal";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { formatDate } from "@/utils/helpers";
 
 interface Room {
   id: string; roomName: string; subject: string; teacherName: string;
   teacherId: string; roomCode: string; createdAt: string;
-  participants: string[]; isActive: boolean; scheduledAt?: string;
+  participants: string[]; isActive: boolean; scheduledAt?: string; currentSession?: string;
 }
 
 export default function DashboardPage() {
   const { loading: authLoading } = useProtectedRoute();
   const { userData } = useAuth();
+  const router = useRouter();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loadingRooms, setLoadingRooms] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showClassPicker, setShowClassPicker] = useState(false);
   const [activeTab, setActiveTab] = useState<"all"|"upcoming"|"completed">("all");
+  const [terminatingRoomId, setTerminatingRoomId] = useState<string | null>(null);
 
   const fetchRooms = useCallback(async () => {
     if (!userData) return;
     setLoadingRooms(true);
     try {
-      const q = (userData.role === "teacher" || userData.role === "admin")
+      const q = userData.role === "admin"
+        ? query(collection(db, "rooms"))
+        : userData.role === "teacher"
         ? query(collection(db, "rooms"), where("teacherId", "==", userData.uid))
         : query(collection(db, "rooms"), where("participants", "array-contains", userData.uid));
       const snapshot = await getDocs(q);
@@ -42,7 +47,56 @@ export default function DashboardPage() {
     finally { setLoadingRooms(false); }
   }, [userData]);
 
-  useEffect(() => { if (userData) fetchRooms(); }, [userData, fetchRooms]);
+  useEffect(() => {
+    if (!userData) return;
+
+    const roomsQuery = userData.role === "admin"
+      ? query(collection(db, "rooms"))
+      : userData.role === "teacher"
+      ? query(collection(db, "rooms"), where("teacherId", "==", userData.uid))
+      : query(collection(db, "rooms"), where("participants", "array-contains", userData.uid));
+
+    const unsubscribe = onSnapshot(
+      roomsQuery,
+      (snapshot) => {
+        const fetched = snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as Room[];
+        fetched.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        setRooms(fetched);
+        setLoadingRooms(false);
+      },
+      (err) => {
+        console.error("Failed to subscribe to rooms:", err);
+        setLoadingRooms(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [userData]);
+
+  const handleTerminateLiveClass = async (room: Room) => {
+    if (!userData || !room.isActive) return;
+    const canTerminate = userData.role === "admin" || (userData.role === "teacher" && room.teacherId === userData.uid);
+    if (!canTerminate) return;
+
+    const confirmed = window.confirm(`Terminate the live class "${room.roomName}"? Students will no longer be able to join this session.`);
+    if (!confirmed) return;
+
+    setTerminatingRoomId(room.id);
+    try {
+      await updateDoc(doc(db, "rooms", room.id), {
+        isActive: false,
+        currentSession: null,
+        endedAt: new Date().toISOString(),
+        endedBy: userData.uid,
+      });
+      setRooms(prev => prev.map(r => r.id === room.id ? { ...r, isActive: false, currentSession: undefined } : r));
+    } catch (err) {
+      console.error("Failed to terminate live class:", err);
+      window.alert("Could not terminate the live class. Please try again.");
+    } finally {
+      setTerminatingRoomId(null);
+    }
+  };
 
   if (authLoading) {
     return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg-base)" }}><div className="spinner" /></div>);
@@ -133,9 +187,21 @@ export default function DashboardPage() {
               <span style={{ fontSize: 14, fontWeight: 500, color: "var(--text-primary)" }}>{liveRooms[0].roomName}</span>
               <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{liveRooms[0].subject} · {liveRooms[0].teacherName}</span>
             </div>
-            <Link href={`/room/${liveRooms[0].id}/meeting`}>
-              <button className="btn-success" style={{ padding: "7px 18px", fontSize: 13 }}>Join Class Now →</button>
-            </Link>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <Link href={`/room/${liveRooms[0].id}/meeting`}>
+                <button className="btn-success" style={{ padding: "7px 18px", fontSize: 13 }}>Join Class Now →</button>
+              </Link>
+              {isTeacher && (
+                <button
+                  className="btn-danger"
+                  disabled={terminatingRoomId === liveRooms[0].id}
+                  onClick={() => handleTerminateLiveClass(liveRooms[0])}
+                  style={{ padding: "7px 18px", fontSize: 13 }}
+                >
+                  {terminatingRoomId === liveRooms[0].id ? "Terminating..." : "Terminate Class"}
+                </button>
+              )}
+            </div>
           </div>
         )}
 
@@ -168,8 +234,7 @@ export default function DashboardPage() {
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {filteredRooms.map(room => (
-                  <Link key={room.id} href={`/room/${room.id}`} style={{ textDecoration: "none" }}>
-                    <div className="card card-interactive" style={{ padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, cursor: "pointer" }}>
+                    <div key={room.id} className="card card-interactive" onClick={() => router.push(`/room/${room.id}`)} style={{ padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, cursor: "pointer" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 14, flex: 1, minWidth: 0 }}>
                         <div style={{ width: 42, height: 42, borderRadius: "var(--radius-md)", background: room.isActive ? "var(--green-light)" : "var(--blue-light)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                           {room.isActive ? (
@@ -186,14 +251,26 @@ export default function DashboardPage() {
                           </p>
                         </div>
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, flexWrap: "wrap", justifyContent: "flex-end" }}>
                         {room.isActive && <span className="badge badge-live">Live</span>}
                         <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{room.participants?.length || 0} students</span>
                         {isTeacher && <span style={{ fontSize: 11, fontFamily: "monospace", fontWeight: 600, color: "var(--blue)", background: "var(--blue-light)", padding: "3px 8px", borderRadius: "var(--radius-sm)" }}>{room.roomCode}</span>}
+                        {isTeacher && room.isActive && (
+                          <button
+                            className="btn-danger"
+                            disabled={terminatingRoomId === room.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleTerminateLiveClass(room);
+                            }}
+                            style={{ padding: "5px 10px", fontSize: 11 }}
+                          >
+                            {terminatingRoomId === room.id ? "Ending..." : "Terminate"}
+                          </button>
+                        )}
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2"><polyline points="9,18 15,12 9,6"/></svg>
                       </div>
                     </div>
-                  </Link>
                 ))}
               </div>
             )}
@@ -279,7 +356,11 @@ export default function DashboardPage() {
             {rooms.length === 0 ? (
               <div style={{ textAlign: "center", padding: "24px 0" }}>
                 <p style={{ fontSize: 14, color: "var(--text-muted)", marginBottom: 16 }}>No batches found</p>
-                <button className="btn-primary" onClick={() => { setShowClassPicker(false); isTeacher ? setShowCreateModal(true) : setShowJoinModal(true); }}>{isTeacher ? "Create Batch" : "Join with Code"}</button>
+                <button className="btn-primary" onClick={() => {
+                  setShowClassPicker(false);
+                  if (isTeacher) setShowCreateModal(true);
+                  else setShowJoinModal(true);
+                }}>{isTeacher ? "Create Batch" : "Join with Code"}</button>
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 320, overflowY: "auto" }}>
