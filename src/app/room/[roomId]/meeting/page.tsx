@@ -320,12 +320,12 @@ export default function MeetingPage() {
               {/* Student info note */}
               {!isTeacher && (
                 <div style={{ padding: "10px 14px", borderRadius: "var(--radius-md)", background: "var(--yellow-light)", border: "1px solid rgba(234,179,8,0.15)", fontSize: 12.5, color: "var(--text-secondary)", lineHeight: 1.6, marginBottom: 20 }}>
-                  <span style={{ fontWeight: 600, color: "var(--yellow)" }}>Note:</span> Your request to join will be sent to the teacher for approval.
+                  <span style={{ fontWeight: 600, color: "var(--yellow)" }}>Note:</span> You can join directly once the class is live.
                 </div>
               )}
 
               <div className="meeting-prejoin-actions" style={{ display: "flex", gap: 12 }}>
-                <button className="btn-primary" style={{ flex: 1, padding: "14px 24px", fontSize: 15 }} onClick={async () => {
+                <button className="btn-primary" disabled={!isTeacher && !room.isActive} style={{ flex: 1, padding: "14px 24px", fontSize: 15 }} onClick={async () => {
                   if (isTeacher) {
                     const sessionId = room.isActive && room.currentSession
                       ? room.currentSession
@@ -335,12 +335,12 @@ export default function MeetingPage() {
                     setRoom((prev) => prev ? { ...prev, currentSession: sessionId, isActive: true } : prev);
                     setJoined(true);
                   } else {
-                    // Student: send join request instead of directly joining
-                    handleStudentJoinRequest();
+                    setMeetingSession(room.currentSession || roomId);
+                    setJoined(true);
                   }
                 }}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
-                  {isTeacher ? (room.isActive ? "Rejoin Classroom" : "Start Live Class") : "Request to Join"}
+                  {isTeacher ? (room.isActive ? "Rejoin Classroom" : "Start Live Class") : room.isActive ? "Join Classroom" : "Class Not Started"}
                 </button>
                 <button className="btn-secondary" style={{ padding: "14px 24px" }} onClick={() => router.push(`/room/${roomId}`)}>Cancel</button>
               </div>
