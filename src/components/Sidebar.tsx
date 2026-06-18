@@ -183,6 +183,15 @@ export default function Sidebar() {
                 <span style={{ fontSize: 10, fontWeight: 700, background: "var(--yellow)", color: "#000", padding: "1px 6px", borderRadius: "var(--radius-full)", marginLeft: "auto" }}>{pendingPaymentCount}</span>
               )}
             </Link>
+            <Link
+              href="/attendance"
+              className={`sidebar-item ${isActive("/attendance") ? "active" : ""}`}
+              onClick={() => setMobileOpen(false)}
+              style={{ display: "flex", alignItems: "center" }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17,11 19,13 23,9"/></svg>
+              <span>{t("nav.student_attendance")}</span>
+            </Link>
           </>
         )}
 
