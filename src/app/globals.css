@@ -1792,10 +1792,24 @@ body,
     max-width: 100vw;
   }
 
-  /* Stats → single column */
+  /* Stats → single column, smaller min width, smaller padding */
   .stats-grid {
     grid-template-columns: 1fr !important;
-    gap: 10px !important;
+    gap: 12px !important;
+  }
+
+  .stat-card {
+    padding: 20px !important;
+    gap: 16px !important;
+  }
+
+  .stat-value {
+    font-size: 36px !important;
+  }
+
+  .stat-icon {
+    width: 40px !important;
+    height: 40px !important;
   }
 
   .recordings-grid {
