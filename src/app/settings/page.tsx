@@ -252,19 +252,19 @@ export default function SettingsPage() {
     <DashboardLayout title={t("nav.settings")}>
       <div className="page-enter" style={{ maxWidth: 800, margin: "0 auto" }}>
         {/* Header */}
-        <div style={{ marginBottom: 28 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
-            {t("settings.title")}
+        <div style={{ marginBottom: 48, position: "relative", zIndex: 10 }}>
+          <h1 style={{ fontSize: "clamp(24px, 4vw, 32px)", fontWeight: 800, letterSpacing: "-0.02em", marginBottom: 6 }}>
+            <span className="text-gradient">{t("settings.title")}</span>
           </h1>
-          <p style={{ fontSize: 14, color: "var(--text-secondary)" }}>
+          <p style={{ fontSize: 15, color: "var(--text-secondary)", fontWeight: 500 }}>
             {t("settings.subtitle")}
           </p>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
           {/* General Preferences Card */}
-          <div className="card" style={{ padding: 24 }}>
-            <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--text-primary)", marginBottom: 20 }}>
+          <div className="glass-card" style={{ padding: 32, border: "1px solid var(--border-glow)", boxShadow: "var(--shadow-md)" }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--text-primary)", marginBottom: 24, letterSpacing: "-0.01em" }}>
               {t("settings.general_pref")}
             </h2>
 
@@ -365,8 +365,8 @@ export default function SettingsPage() {
           </div>
 
           {/* Edit Profile (Privacy & Credentials) */}
-          <div className="card" style={{ padding: 24 }}>
-            <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--text-primary)", marginBottom: 20 }}>
+          <div className="glass-card" style={{ padding: 32, border: "1px solid var(--border-glow)", boxShadow: "var(--shadow-md)" }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--text-primary)", marginBottom: 24, letterSpacing: "-0.01em" }}>
               {t("settings.privacy_profile")}
             </h2>
 
@@ -419,8 +419,8 @@ export default function SettingsPage() {
           </div>
 
           {/* Change Password Card */}
-          <div className="card" style={{ padding: 24 }}>
-            <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--text-primary)", marginBottom: 20 }}>
+          <div className="glass-card" style={{ padding: 32, border: "1px solid var(--border-glow)", boxShadow: "var(--shadow-md)" }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--text-primary)", marginBottom: 24, letterSpacing: "-0.01em" }}>
               {t("settings.security_settings")}
             </h2>
 

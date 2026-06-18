@@ -174,19 +174,20 @@ export default function DashboardPage() {
     <DashboardLayout title={t("dash.title")}>
       <div className="page-enter">
         {/* Greeting + Actions */}
-        <div className="dash-header" style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 36, gap: 16, flexWrap: "wrap" }}>
+        <div className="dash-header" style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 48, gap: 16, flexWrap: "wrap", position: "relative", zIndex: 10 }}>
           <div>
-            <h1 style={{ fontSize: 28, fontWeight: 700, color: "var(--text-primary)", marginBottom: 6, letterSpacing: "-0.02em" }}>
-              {t(getGreetingKey())}, {userData.name.split(" ")[0]} {getGreetingEmoji()}
+            <h1 style={{ fontSize: "clamp(32px, 5vw, 42px)", fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 8, lineHeight: 1.1 }}>
+              <span className="text-gradient">{t(getGreetingKey())},</span><br />
+              <span className="text-gradient-blue">{userData.name.split(" ")[0]} {getGreetingEmoji()}</span>
             </h1>
-            <p style={{ fontSize: 14, color: "var(--text-secondary)", marginBottom: 4 }}>
+            <p style={{ fontSize: 16, color: "var(--text-secondary)", marginBottom: 4, fontWeight: 500 }}>
               {todayStr}
             </p>
-            <p style={{ fontSize: 13, color: "var(--text-muted)", lineHeight: 1.5 }}>
+            <p style={{ fontSize: 14, color: "var(--text-muted)", lineHeight: 1.5 }}>
               {getContextLine()}
             </p>
           </div>
-          <div className="dash-actions" style={{ display: "flex", gap: 12 }}>
+          <div className="dash-actions" style={{ display: "flex", gap: 16 }}>
             <button className="btn-success" onClick={() => rooms.length > 0 ? setShowClassPicker(true) : (isTeacher ? setShowCreateModal(true) : setShowJoinModal(true))}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 7l-7 5 7 5V7z" /><rect x="1" y="5" width="15" height="14" rx="2" /></svg>
               {isTeacher ? t("dash.start_live") : t("dash.join_live")}
@@ -194,14 +195,14 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 18, marginBottom: 36 }}>
+        {/* Massive Hero Stats Grid */}
+        <div className="stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 24, marginBottom: 48 }}>
           {stats.map((s, i) => (
-            <div key={s.label} className="stat-card" style={{ animationDelay: `${i * 60}ms`, animation: `stagger-in 400ms ease-out ${i * 60}ms both` }}>
-              <div className="stat-icon" style={{ background: s.bg, color: s.color }}>{s.icon}</div>
+            <div key={s.label} className="glass-card stat-card" style={{ padding: 32, display: "flex", flexDirection: "column", gap: 24, animationDelay: `${i * 60}ms`, animation: `stagger-in 400ms ease-out ${i * 60}ms both` }}>
+              <div className="stat-icon" style={{ width: 48, height: 48, borderRadius: 12, background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", color: s.color }}>{s.icon}</div>
               <div>
-                <p className="stat-value">{s.value}</p>
-                <p className="stat-label">{s.label}</p>
+                <p style={{ fontSize: 48, fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1, marginBottom: 8, background: `linear-gradient(135deg, #fff, ${s.color})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{s.value}</p>
+                <p style={{ fontSize: 14, fontWeight: 500, color: "var(--text-secondary)" }}>{s.label}</p>
               </div>
             </div>
           ))}
@@ -209,33 +210,32 @@ export default function DashboardPage() {
 
         {/* Live class banners (all live rooms) */}
         {liveRooms.length > 0 && (
-          <div style={{ marginBottom: 28 }}>
-            <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--text-primary)", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--green)", animation: "pulse-dot 2s ease-in-out infinite" }} />
+          <div style={{ marginBottom: 48 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--text-primary)", marginBottom: 16, display: "flex", alignItems: "center", gap: 12, letterSpacing: "-0.01em" }}>
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--green)", animation: "pulse-dot 2s ease-in-out infinite", boxShadow: "0 0 16px var(--green)" }} />
               {t("dash.live_classes")}
             </h2>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {liveRooms.map(room => (
-                <div key={room.id} className="card live-banner" style={{
-                  padding: "18px 24px", borderLeft: "3px solid var(--green)",
-                  display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12,
-                  boxShadow: "0 0 0 1px rgba(34, 197, 94, 0.1), 0 0 24px rgba(34, 197, 94, 0.06)",
+                <div key={room.id} className="glass-card" style={{
+                  padding: "20px 28px", borderLeft: "4px solid var(--green)",
+                  display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16,
+                  boxShadow: "0 0 0 1px rgba(34, 197, 94, 0.15), 0 8px 32px rgba(34, 197, 94, 0.1)",
                 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <span className="badge badge-live">{t("dash.live_now")}</span>
-                    <span style={{ fontSize: 14, fontWeight: 500, color: "var(--text-primary)" }}>{room.roomName}</span>
-                    <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{room.subject} · {room.teacherName}</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                    <span className="badge badge-live" style={{ padding: "4px 10px", fontSize: 12 }}>{t("dash.live_now")}</span>
+                    <span style={{ fontSize: 16, fontWeight: 600, color: "var(--text-primary)", letterSpacing: "-0.01em" }}>{room.roomName}</span>
+                    <span style={{ fontSize: 14, color: "var(--text-muted)" }}>{room.subject} <span style={{ opacity: 0.5 }}>|</span> {room.teacherName}</span>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                     <Link href={`/room/${room.id}/meeting`}>
-                      <button className="btn-success" style={{ padding: "7px 18px", fontSize: 13 }}>{t("dash.join_class_now")}</button>
+                      <button className="btn-success">{t("dash.join_class_now")}</button>
                     </Link>
                     {isTeacher && (
                       <button
                         className="btn-danger"
                         disabled={terminatingRoomId === room.id}
                         onClick={() => handleTerminateLiveClass(room)}
-                        style={{ padding: "7px 18px", fontSize: 13 }}
                       >
                         {terminatingRoomId === room.id ? t("dash.terminating") : t("dash.terminate_class")}
                       </button>

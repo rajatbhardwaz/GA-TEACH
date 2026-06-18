@@ -201,12 +201,12 @@ export default function EnrollmentsPage() {
     <DashboardLayout title="Enrollment Requests">
       <div className="page-enter">
         {/* Page Header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28, gap: 16, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 36, gap: 16, flexWrap: "wrap", position: "relative", zIndex: 10 }}>
           <div>
-            <h1 style={{ fontSize: 24, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
-              Enrollment Access Requests 🎓
+            <h1 style={{ fontSize: "clamp(24px, 4vw, 32px)", fontWeight: 800, letterSpacing: "-0.02em", marginBottom: 6 }}>
+              <span className="text-gradient">Enrollment Requests 🎓</span>
             </h1>
-            <p style={{ fontSize: 14, color: "var(--text-secondary)" }}>
+            <p style={{ fontSize: 15, color: "var(--text-secondary)", fontWeight: 500 }}>
               Review and approve access for students seeking to enroll in your classroom batches.
             </p>
           </div>
@@ -220,9 +220,9 @@ export default function EnrollmentsPage() {
         </div>
 
         {/* Informative Help Box */}
-        <div style={{ padding: "12px 16px", background: "var(--blue-light)", border: "1px solid rgba(59,130,246,0.15)", borderRadius: "var(--radius-lg)", marginBottom: 24 }}>
-          <p style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.6 }}>
-            💡 <strong>How it works:</strong> Approve a student&apos;s request to grant access. For <strong>Free batches</strong>, they are immediately enrolled. For <strong>Paid batches</strong>, they will be allowed to view payment checkout and pay UPI.
+        <div className="glass-card" style={{ padding: "16px 24px", background: "rgba(59,130,246,0.05)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: "var(--radius-lg)", marginBottom: 32 }}>
+          <p style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.6 }}>
+            💡 <strong style={{ color: "var(--blue)" }}>How it works:</strong> Approve a student&apos;s request to grant access. For <strong style={{ color: "var(--text-primary)" }}>Free batches</strong>, they are immediately enrolled. For <strong style={{ color: "var(--text-primary)" }}>Paid batches</strong>, they will be allowed to view payment checkout and pay UPI.
           </p>
         </div>
 
@@ -263,25 +263,25 @@ export default function EnrollmentsPage() {
             {[1, 2, 3].map(i => <div key={i} className="skeleton" style={{ height: 100 }} />)}
           </div>
         ) : filteredRequests.length === 0 ? (
-          <div className="card empty-state" style={{ marginTop: 8 }}>
-            <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="1.5">
+          <div className="glass-card empty-state" style={{ marginTop: 8, padding: 60, textAlign: "center", border: "1px dashed var(--border)" }}>
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="1" style={{ marginBottom: 16 }}>
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
             </svg>
-            <h3>No requests found</h3>
-            <p>No enrollment access requests match the selected filters.</p>
+            <h3 style={{ fontSize: 20, fontWeight: 600, color: "var(--text-primary)", marginBottom: 8 }}>No requests found</h3>
+            <p style={{ fontSize: 15, color: "var(--text-secondary)" }}>No enrollment access requests match the selected filters.</p>
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {filteredRequests.map(req => (
-              <div key={req.id} className="card" style={{ padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+              <div key={req.id} className="glass-card" style={{ padding: "24px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, flexWrap: "wrap", border: "1px solid var(--border-glow)", boxShadow: "var(--shadow-md)" }}>
                 <div>
-                  <h3 style={{ fontSize: 15, fontWeight: 600, color: "var(--text-primary)", marginBottom: 4 }}>
+                  <h3 style={{ fontSize: 18, fontWeight: 600, color: "var(--text-primary)", marginBottom: 6, letterSpacing: "-0.01em" }}>
                     {req.studentName}
                   </h3>
-                  <p style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 8 }}>
+                  <p style={{ fontSize: 14, color: "var(--text-muted)", marginBottom: 12 }}>
                     {req.studentEmail}
                   </p>
-                  <p style={{ fontSize: 12.5, color: "var(--text-secondary)" }}>
+                  <p style={{ fontSize: 14, color: "var(--text-secondary)" }}>
                     Wants to enroll in: <strong style={{ color: "var(--text-primary)" }}>{req.roomName}</strong>
                   </p>
                 </div>

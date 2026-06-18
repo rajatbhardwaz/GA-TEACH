@@ -194,12 +194,12 @@ export default function ApprovalsPage() {
     <DashboardLayout title="Payment Approvals">
       <div className="page-enter">
         {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28, gap: 16, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 36, gap: 16, flexWrap: "wrap", position: "relative", zIndex: 10 }}>
           <div>
-            <h1 style={{ fontSize: 24, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
-              Payment Verification Dashboard 💳
+            <h1 style={{ fontSize: "clamp(24px, 4vw, 32px)", fontWeight: 800, letterSpacing: "-0.02em", marginBottom: 6 }}>
+              <span className="text-gradient">Payment Approvals 💳</span>
             </h1>
-            <p style={{ fontSize: 14, color: "var(--text-secondary)" }}>
+            <p style={{ fontSize: 15, color: "var(--text-secondary)", fontWeight: 500 }}>
               Check student Transaction Ref Numbers (UTR) against your bank receipts to approve enrollments.
             </p>
           </div>
@@ -213,9 +213,9 @@ export default function ApprovalsPage() {
         </div>
 
         {/* Informative Help Box */}
-        <div style={{ padding: "12px 16px", background: "var(--blue-light)", border: "1px solid rgba(59,130,246,0.15)", borderRadius: "var(--radius-lg)", marginBottom: 24 }}>
-          <p style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.6 }}>
-            💡 <strong>How it works:</strong> Students pay to your UPI ID directly and paste their 12-digit transaction ID (UTR). Match the transaction ID shown below with the credit receipt in your bank/UPI app statement to confirm the credit, then click <strong>Approve</strong>.
+        <div className="glass-card" style={{ padding: "16px 24px", background: "rgba(59,130,246,0.05)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: "var(--radius-lg)", marginBottom: 32 }}>
+          <p style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.6 }}>
+            💡 <strong style={{ color: "var(--blue)" }}>How it works:</strong> Students pay to your UPI ID directly and paste their 12-digit transaction ID (UTR). Match the transaction ID shown below with the credit receipt in your bank/UPI app statement to confirm the credit, then click <strong style={{ color: "var(--text-primary)" }}>Approve</strong>.
           </p>
         </div>
 
@@ -256,24 +256,24 @@ export default function ApprovalsPage() {
             {[1, 2, 3].map(i => <div key={i} className="skeleton" style={{ height: 100 }} />)}
           </div>
         ) : filteredRequests.length === 0 ? (
-          <div className="card empty-state" style={{ marginTop: 8 }}>
-            <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="1.5">
+          <div className="glass-card empty-state" style={{ marginTop: 8, padding: 60, textAlign: "center", border: "1px dashed var(--border)" }}>
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="1" style={{ marginBottom: 16 }}>
               <rect x="2" y="4" width="20" height="16" rx="2" />
               <line x1="2" y1="10" x2="22" y2="10" />
             </svg>
-            <h3>No requests found</h3>
-            <p>No enrollment requests match the selected filters or search terms.</p>
+            <h3 style={{ fontSize: 20, fontWeight: 600, color: "var(--text-primary)", marginBottom: 8 }}>No requests found</h3>
+            <p style={{ fontSize: 15, color: "var(--text-secondary)" }}>No enrollment requests match the selected filters or search terms.</p>
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {filteredRequests.map(req => (
-              <div key={req.id} className="card" style={{ padding: "18px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
+              <div key={req.id} className="glass-card" style={{ padding: "24px 32px", display: "flex", flexDirection: "column", gap: 20, border: "1px solid var(--border-glow)", boxShadow: "var(--shadow-md)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
                   <div>
-                    <h3 style={{ fontSize: 15, fontWeight: 600, color: "var(--text-primary)", marginBottom: 4 }}>
+                    <h3 style={{ fontSize: 18, fontWeight: 600, color: "var(--text-primary)", marginBottom: 6, letterSpacing: "-0.01em" }}>
                       {req.studentName}
                     </h3>
-                    <p style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 6 }}>
+                    <p style={{ fontSize: 14, color: "var(--text-muted)", marginBottom: 12 }}>
                       {req.studentEmail}
                     </p>
                     <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", fontSize: 12, color: "var(--text-muted)" }}>
@@ -336,14 +336,14 @@ export default function ApprovalsPage() {
         {/* Rejection Modal */}
         {selectedRequestForRejection && (
           <div className="modal-overlay" onClick={() => setSelectedRequestForRejection(null)}>
-            <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 440 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-                <div style={{ width: 44, height: 44, borderRadius: "var(--radius-md)", background: "var(--red-light)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--red)" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
+            <div className="glass-card modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 440, padding: 32, border: "1px solid var(--border-glow)", boxShadow: "0 24px 48px rgba(0,0,0,0.4)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24 }}>
+                <div style={{ width: 48, height: 48, borderRadius: 12, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--red)" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
                 </div>
                 <div>
-                  <h2 style={{ fontSize: 17, fontWeight: 600, color: "var(--text-primary)" }}>Reject Enrollment Request</h2>
-                  <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>Explain why the payment verification failed</p>
+                  <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.01em" }}>Reject Request</h2>
+                  <p style={{ fontSize: 14, color: "var(--text-secondary)" }}>Explain why the verification failed</p>
                 </div>
               </div>
 

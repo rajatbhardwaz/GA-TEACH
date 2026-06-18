@@ -160,16 +160,36 @@ export default function LoginPage() {
   );
 
   return (
-    <div className="auth-card-wrapper" style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, background: "var(--bg-base)", position: "relative", overflow: "hidden" }}>
-      <div style={{ position: "absolute", width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 60%)", top: -200, right: -200, pointerEvents: "none" }} />
+    <div className="auth-layout">
+      {/* V2 Global Background Mesh */}
+      <div className="bg-mesh" />
 
-      <div className="page-enter" style={{ width: "100%", maxWidth: 420, position: "relative", zIndex: 1 }}>
-        <div className="auth-logo" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 36 }}>
-          <img src="/logo.png" alt="Glorious Amplification" style={{ width: 44, height: 44, objectFit: "contain" }} />
-          <span style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "0.02em" }}>Glorious Amplification</span>
+      {/* Left side: Visual Marketing Area */}
+      <div className="auth-marketing-side">
+        <div style={{ position: "relative", zIndex: 10, maxWidth: 480 }}>
+          <Link href="/" style={{ display: "inline-block", marginBottom: 32 }}>
+            <img src="/logo.png" alt="Logo" style={{ width: 48, height: 48, objectFit: "contain" }} />
+          </Link>
+          <h1 style={{ fontSize: "clamp(36px, 5vw, 48px)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: 24 }}>
+            <span className="text-gradient">Welcome back to</span><br />
+            <span className="text-gradient-blue">Glorious Amplification.</span>
+          </h1>
+          <p style={{ fontSize: 18, color: "var(--text-secondary)", lineHeight: 1.6 }}>
+            Resume your journey with premium HD coaching, expert mentorship, and seamless learning experiences.
+          </p>
         </div>
+      </div>
 
-        <div className="card auth-card-inner" style={{ padding: 32 }}>
+      {/* Right side: Form */}
+      <div className="auth-form-side">
+        <div className="page-enter" style={{ width: "100%", maxWidth: 420 }}>
+          <div className="glass-card" style={{ padding: 40, border: "1px solid var(--border-glow)", boxShadow: "var(--shadow-lg)" }}>
+            
+            {/* Mobile Logo Fallback */}
+            <div className="auth-logo" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 36 }}>
+              <img src="/logo.png" alt="Glorious Amplification" style={{ width: 40, height: 40, objectFit: "contain" }} />
+              <span style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.01em" }}>Glorious Amplification</span>
+            </div>
           {/* ─── MAIN LOGIN VIEW ─── */}
           {view === "main" && (
             <>

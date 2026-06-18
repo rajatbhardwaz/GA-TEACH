@@ -26,6 +26,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} h-full`}>
       <body className="min-h-full flex flex-col antialiased">
+        <div className="bg-mesh" />
         <ThemeProvider>
           <AuthProvider>
             <LanguageProvider>

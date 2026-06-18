@@ -136,16 +136,36 @@ export default function SignupPage() {
   );
 
   return (
-    <div className="auth-card-wrapper" style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, background: "var(--bg-base)", position: "relative", overflow: "hidden" }}>
-      <div style={{ position: "absolute", width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(circle, rgba(34,197,94,0.05) 0%, transparent 60%)", bottom: -200, left: -100, pointerEvents: "none" }} />
+    <div className="auth-layout">
+      {/* V2 Global Background Mesh */}
+      <div className="bg-mesh" />
 
-      <div className="page-enter" style={{ width: "100%", maxWidth: 420, position: "relative", zIndex: 1 }}>
-        <div className="auth-logo" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 36 }}>
-          <img src="/logo.png" alt="Glorious Amplification" style={{ width: 44, height: 44, objectFit: "contain" }} />
-          <span style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "0.02em" }}>Glorious Amplification</span>
+      {/* Left side: Visual Marketing Area */}
+      <div className="auth-marketing-side" style={{ background: "radial-gradient(circle at 100% 0%, rgba(16, 185, 129, 0.08) 0%, transparent 50%), radial-gradient(circle at 0% 100%, rgba(59, 130, 246, 0.05) 0%, transparent 50%)" }}>
+        <div style={{ position: "relative", zIndex: 10, maxWidth: 480 }}>
+          <Link href="/" style={{ display: "inline-block", marginBottom: 32 }}>
+            <img src="/logo.png" alt="Logo" style={{ width: 48, height: 48, objectFit: "contain" }} />
+          </Link>
+          <h1 style={{ fontSize: "clamp(36px, 5vw, 48px)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: 24 }}>
+            <span className="text-gradient">Start your</span><br />
+            <span style={{ background: "linear-gradient(135deg, var(--green), var(--blue))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Glorious Journey.</span>
+          </h1>
+          <p style={{ fontSize: 18, color: "var(--text-secondary)", lineHeight: 1.6 }}>
+            Sign up to access live HD sessions, automated attendance, and expert mentorship. Build your future today.
+          </p>
         </div>
+      </div>
 
-        <div className="card auth-card-inner" style={{ padding: 32 }}>
+      {/* Right side: Form */}
+      <div className="auth-form-side">
+        <div className="page-enter" style={{ width: "100%", maxWidth: 420 }}>
+          <div className="glass-card" style={{ padding: 40, border: "1px solid var(--border-glow)", boxShadow: "var(--shadow-lg)" }}>
+            
+            {/* Mobile Logo Fallback */}
+            <div className="auth-logo" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 36 }}>
+              <img src="/logo.png" alt="Glorious Amplification" style={{ width: 40, height: 40, objectFit: "contain" }} />
+              <span style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.01em" }}>Glorious Amplification</span>
+            </div>
           <h1 style={{ fontSize: 22, fontWeight: 600, textAlign: "center", marginBottom: 4, color: "var(--text-primary)" }}>Begin your journey</h1>
           <p style={{ fontSize: 14, textAlign: "center", color: "var(--text-secondary)", marginBottom: 28 }}>Register as a student or faculty member</p>
           {error && <div className="error-alert">{error}</div>}

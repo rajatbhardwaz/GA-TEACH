@@ -242,21 +242,24 @@ export default function AttendancePage() {
     <DashboardLayout title={t("attend.title")}>
       <div className="page-enter">
         {/* Header */}
-        <div style={{ marginBottom: 28 }}>
-          <h1 style={{ fontSize: 26, fontWeight: 700, marginBottom: 4 }}>
-            {t("attend.title")} 📋
+        <div style={{ marginBottom: 48, position: "relative", zIndex: 10 }}>
+          <h1 style={{ fontSize: "clamp(24px, 4vw, 32px)", fontWeight: 800, letterSpacing: "-0.02em", marginBottom: 6 }}>
+            <span className="text-gradient">{t("attend.title")} 📋</span>
           </h1>
-          <p style={{ fontSize: 14, color: "var(--text-secondary)" }}>
+          <p style={{ fontSize: 15, color: "var(--text-secondary)", fontWeight: 500 }}>
             {isAdmin ? t("attend.subtitle_admin") : t("attend.subtitle")}
           </p>
         </div>
 
-        {/* Stats */}
-        <div className="stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 28 }}>
-          {stats.map((s) => (
-            <div key={s.label} className="stat-card">
-              <div className="stat-icon" style={{ background: s.bg, color: s.color }}>{s.icon}</div>
-              <div><p className="stat-value">{s.value}</p><p className="stat-label">{s.label}</p></div>
+        {/* Massive Hero Stats Grid */}
+        <div className="stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 24, marginBottom: 48 }}>
+          {stats.map((s, i) => (
+            <div key={s.label} className="glass-card stat-card" style={{ padding: 32, display: "flex", flexDirection: "column", gap: 24, animationDelay: `${i * 60}ms`, animation: `stagger-in 400ms ease-out ${i * 60}ms both` }}>
+              <div className="stat-icon" style={{ width: 48, height: 48, borderRadius: 12, background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", color: s.color }}>{s.icon}</div>
+              <div>
+                <p style={{ fontSize: 48, fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1, marginBottom: 8, background: `linear-gradient(135deg, #fff, ${s.color})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{s.value}</p>
+                <p style={{ fontSize: 14, fontWeight: 500, color: "var(--text-secondary)" }}>{s.label}</p>
+              </div>
             </div>
           ))}
         </div>
@@ -317,12 +320,12 @@ export default function AttendancePage() {
 
         {/* Table */}
         {displayStudents.length === 0 ? (
-          <div className="card empty-state">
-            <h3>{searchTerm ? t("attend.no_match") : t("attend.no_records")}</h3>
-            <p>{searchTerm ? "" : t("attend.no_records_desc")}</p>
+          <div className="glass-card empty-state" style={{ marginTop: 8, padding: 60, textAlign: "center", border: "1px dashed var(--border)" }}>
+            <h3 style={{ fontSize: 20, fontWeight: 600, color: "var(--text-primary)", marginBottom: 8 }}>{searchTerm ? t("attend.no_match") : t("attend.no_records")}</h3>
+            <p style={{ fontSize: 15, color: "var(--text-secondary)" }}>{searchTerm ? "" : t("attend.no_records_desc")}</p>
           </div>
         ) : (
-          <div className="card" style={{ padding: 0, overflow: "hidden", overflowX: "auto" }}>
+          <div className="glass-card" style={{ padding: 0, overflow: "hidden", overflowX: "auto", border: "1px solid var(--border-glow)", boxShadow: "var(--shadow-lg)" }}>
             <table className="data-table">
               <thead>
                 <tr>

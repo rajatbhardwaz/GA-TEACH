@@ -272,7 +272,7 @@ export default function BatchesPage() {
                 ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                         {filteredRooms.map(room => (
-                            <div key={room.id} className="card batch-mgmt-card" style={{ padding: 0, overflow: "hidden" }}>
+                            <div key={room.id} className="glass-card batch-mgmt-card" style={{ padding: 0, overflow: "hidden", border: "1px solid var(--border-glow)", boxShadow: "var(--shadow-lg)" }}>
                                 {/* Status strip */}
                                 <div style={{
                                     height: 3,
@@ -289,19 +289,20 @@ export default function BatchesPage() {
                                         onClick={() => router.push(`/room/${room.id}`)}
                                     >
                                         <div style={{
-                                            width: 46, height: 46, borderRadius: "var(--radius-md)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                                            width: 56, height: 56, borderRadius: "var(--radius-lg)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
                                             background: room.isActive && (room.status || "active") !== "paused"
-                                                ? "var(--green-light)"
+                                                ? "linear-gradient(135deg, var(--green-light), transparent)"
                                                 : room.status === "paused"
-                                                    ? "var(--yellow-light)"
-                                                    : "var(--blue-light)",
+                                                    ? "linear-gradient(135deg, var(--yellow-light), transparent)"
+                                                    : "linear-gradient(135deg, var(--blue-light), transparent)",
+                                            border: `1px solid ${room.isActive && (room.status || "active") !== "paused" ? "var(--green)" : room.status === "paused" ? "var(--yellow)" : "var(--blue)"}`
                                         }}>
                                             {room.isActive && (room.status || "active") !== "paused" ? (
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="2"><path d="M23 7l-7 5 7 5V7z" /><rect x="1" y="5" width="15" height="14" rx="2" /></svg>
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="2"><path d="M23 7l-7 5 7 5V7z" /><rect x="1" y="5" width="15" height="14" rx="2" /></svg>
                                             ) : room.status === "paused" ? (
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--yellow)" strokeWidth="2"><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></svg>
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--yellow)" strokeWidth="2"><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></svg>
                                             ) : (
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" /></svg>
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" /></svg>
                                             )}
                                         </div>
                                         <div style={{ minWidth: 0 }}>
