@@ -346,14 +346,14 @@ export default function LoginPage() {
             </>
           )}
           </div>
-        </div>
 
-        {view === "main" && (
-          <p style={{ fontSize: 14, textAlign: "center", marginTop: 20, color: "var(--text-secondary)" }}>
-            New here?{" "}
-            <Link href="/signup" style={{ color: "var(--blue)", fontWeight: 500 }}>Create your account</Link>
-          </p>
-        )}
+          {view === "main" && (
+            <p style={{ fontSize: 14, textAlign: "center", marginTop: 20, color: "var(--text-secondary)" }}>
+              New here?{" "}
+              <Link href="/signup" style={{ color: "var(--blue)", fontWeight: 500 }}>Create your account</Link>
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Invisible reCAPTCHA container for phone auth */}

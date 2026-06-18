@@ -311,12 +311,13 @@ export default function SignupPage() {
             Sign up with Google
           </button>
           </div>
-        </div>
 
-        <p style={{ fontSize: 14, textAlign: "center", marginTop: 20, color: "var(--text-secondary)" }}>
-          Already registered?{" "}
-          <Link href="/login" style={{ color: "var(--blue)", fontWeight: 500 }}>Sign in</Link>
-        </p>
+          {/* Already registered link nested correctly */}
+          <p style={{ fontSize: 14, textAlign: "center", marginTop: 20, color: "var(--text-secondary)" }}>
+            Already registered?{" "}
+            <Link href="/login" style={{ color: "var(--blue)", fontWeight: 500 }}>Sign in</Link>
+          </p>
+        </div>
       </div>
 
       {/* Invisible reCAPTCHA container for phone auth */}
