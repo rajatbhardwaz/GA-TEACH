@@ -14,11 +14,15 @@ const adminNav = {
   icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>,
 };
 
-export default function Sidebar() {
+interface SidebarProps {
+  mobileOpen: boolean;
+  setMobileOpen: (open: boolean) => void;
+}
+
+export default function Sidebar({ mobileOpen, setMobileOpen }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { userData, isAdmin } = useAuth();
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   // Real-time notification badge counts
   const [pendingAccessCount, setPendingAccessCount] = useState(0);
@@ -237,16 +241,6 @@ export default function Sidebar() {
       {mobileOpen && (
         <div className="sidebar-overlay show" onClick={() => setMobileOpen(false)} />
       )}
-      <button
-        className="hamburger-btn"
-        onClick={() => setMobileOpen(true)}
-        aria-label="Menu"
-        style={{ position: "fixed", top: 8, left: 12, zIndex: 38 }}
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-          <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
-        </svg>
-      </button>
     </>
   );
 }

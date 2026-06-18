@@ -1127,6 +1127,7 @@ a:hover {
   cursor: pointer;
   color: var(--text-secondary);
   transition: all var(--transition-fast);
+  flex-shrink: 0;
 }
 
 .hamburger-btn:hover {
@@ -1455,7 +1456,7 @@ html {
 
   /* Topbar — make room for the hamburger button on the left */
   .topbar {
-    padding: 0 16px 0 60px;
+    padding: 0 16px 0 16px;
     gap: 12px;
   }
 
