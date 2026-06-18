@@ -25,6 +25,14 @@ export default function SettingsPage() {
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
+  // OTP Verification state
+  const [verifyStep, setVerifyStep] = useState<"idle" | "email" | "phone">("idle");
+  const [otpInput, setOtpInput] = useState("");
+  const [generatedOtp, setGeneratedOtp] = useState("");
+  const [pendingEmail, setPendingEmail] = useState("");
+  const [pendingPhone, setPendingPhone] = useState("");
+  const [otpError, setOtpError] = useState("");
+
   // Password change state
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -52,35 +60,128 @@ export default function SettingsPage() {
     e.preventDefault();
     if (!userData || !auth.currentUser) return;
 
-    setLoading(true);
     setErrorMsg("");
     setSuccessMsg("");
 
-    try {
-      const emailChanged = email.trim().toLowerCase() !== userData.email.toLowerCase();
+    const emailChanged = email.trim().toLowerCase() !== userData.email.toLowerCase();
+    const phoneChanged = phone.trim() !== (userData.phone || "");
 
-      // 1. If email changed, update in Firebase Authentication first
+    if (emailChanged) {
+      // Generate OTP for email verification
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      setGeneratedOtp(otp);
+      setPendingEmail(email.trim().toLowerCase());
+      setPendingPhone(phone.trim());
+      setOtpInput("");
+      setOtpError("");
+      setVerifyStep("email");
+    } else if (phoneChanged) {
+      // Generate OTP for phone verification
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      setGeneratedOtp(otp);
+      setPendingEmail(email.trim().toLowerCase());
+      setPendingPhone(phone.trim());
+      setOtpInput("");
+      setOtpError("");
+      setVerifyStep("phone");
+    } else {
+      // Neither changed (only name or nothing changed), save details directly
+      setLoading(true);
+      try {
+        const docRef = doc(db, "users", userData.uid);
+        await setDoc(docRef, {
+          name: name.trim(),
+          email: email.trim().toLowerCase(),
+          phone: phone.trim()
+        }, { merge: true });
+
+        await refreshUserData();
+        setSuccessMsg(t("settings.profile_success"));
+      } catch (err: any) {
+        console.error(err);
+        setErrorMsg(err.message || "Failed to update profile details.");
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otpInput.trim() !== generatedOtp) {
+      setOtpError(t("settings.otp_error"));
+      return;
+    }
+
+    if (verifyStep === "email") {
+      const phoneChanged = pendingPhone !== (userData?.phone || "");
+      if (phoneChanged) {
+        // Transition to phone verification
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        setGeneratedOtp(otp);
+        setOtpInput("");
+        setOtpError("");
+        setVerifyStep("phone");
+      } else {
+        // Phone didn't change, proceed to save details
+        await performSaveDetails(pendingEmail, pendingPhone);
+      }
+    } else if (verifyStep === "phone") {
+      // Phone verification complete, save details
+      await performSaveDetails(pendingEmail, pendingPhone);
+    }
+  };
+
+  const performSaveDetails = async (targetEmail: string, targetPhone: string) => {
+    if (!userData || !auth.currentUser) return;
+    setLoading(true);
+    setErrorMsg("");
+    setSuccessMsg("");
+    setVerifyStep("idle");
+
+    let authEmailUpdated = true;
+    let authUpdateErrorMsg = "";
+
+    try {
+      const emailChanged = targetEmail !== userData.email.toLowerCase();
+
+      // 1. If email changed, try updating in Firebase Authentication
       if (emailChanged) {
-        await updateEmail(auth.currentUser, email.trim());
+        try {
+          await updateEmail(auth.currentUser, targetEmail);
+        } catch (authErr: any) {
+          console.warn("Firebase updateEmail failed, falling back:", authErr);
+          authEmailUpdated = false;
+          if (authErr.code === "auth/requires-recent-login") {
+            authUpdateErrorMsg = "requires-recent-login";
+          } else {
+            authUpdateErrorMsg = authErr.code || authErr.message || "auth-error";
+          }
+        }
       }
 
       // 2. Update student profile details in Firestore user record
       const docRef = doc(db, "users", userData.uid);
       await setDoc(docRef, {
         name: name.trim(),
-        email: email.trim().toLowerCase(),
-        phone: phone.trim()
+        email: targetEmail,
+        phone: targetPhone
       }, { merge: true });
 
       await refreshUserData();
-      setSuccessMsg(t("settings.profile_success"));
+
+      if (emailChanged && !authEmailUpdated) {
+        if (authUpdateErrorMsg === "requires-recent-login") {
+          setErrorMsg("⚠️ For security, you must log out and log back in to change your email address in Authentication. Firestore record was updated.");
+        } else {
+          setSuccessMsg(t("settings.profile_fallback_success"));
+        }
+      } else {
+        setSuccessMsg(t("settings.profile_success"));
+      }
     } catch (err: any) {
       console.error(err);
-      if (err.code === "auth/requires-recent-login") {
-        setErrorMsg("⚠️ For security, you must log out and log back in to change your email address.");
-      } else {
-        setErrorMsg(err.message || "Failed to update profile details.");
-      }
+      setErrorMsg(err.message || "Failed to update profile details.");
     } finally {
       setLoading(false);
     }
@@ -361,6 +462,83 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+
+      {verifyStep !== "idle" && (
+        <div className="modal-overlay" style={{ zIndex: 100 }}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div style={{ marginBottom: 20 }}>
+              <h3 style={{ fontSize: 18, fontWeight: 600, color: "var(--text-primary)", marginBottom: 8 }}>
+                {verifyStep === "email" ? t("settings.otp_title_email") : t("settings.otp_title_phone")}
+              </h3>
+              <p style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: "1.5" }}>
+                {verifyStep === "email"
+                  ? t("settings.otp_desc_email", { email: pendingEmail })
+                  : t("settings.otp_desc_phone", { phone: pendingPhone })}
+              </p>
+            </div>
+
+            {/* Demo Mode Banner */}
+            <div style={{
+              background: "rgba(59, 130, 246, 0.1)",
+              border: "1px dashed rgba(59, 130, 246, 0.3)",
+              borderRadius: "var(--radius-md)",
+              padding: "10px 14px",
+              marginBottom: 16,
+              color: "var(--blue)",
+              fontSize: 13,
+              fontWeight: 500,
+              textAlign: "center"
+            }}>
+              {t("settings.otp_demo_banner", { otp: generatedOtp })}
+            </div>
+
+            {otpError && (
+              <div className="error-alert" style={{ marginBottom: 16 }}>
+                {otpError}
+              </div>
+            )}
+
+            <form onSubmit={handleVerifyOtp} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div>
+                <label className="field-label">{t("settings.otp_input_label")}</label>
+                <input
+                  type="text"
+                  required
+                  maxLength={6}
+                  value={otpInput}
+                  onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  className="input-field"
+                  placeholder="e.g. 123456"
+                  autoFocus
+                  style={{ textAlign: "center", letterSpacing: "0.5em", fontSize: 18, fontWeight: 700 }}
+                />
+              </div>
+
+              <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 8 }}>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => {
+                    setVerifyStep("idle");
+                    setOtpInput("");
+                    setOtpError("");
+                  }}
+                  style={{ padding: "8px 16px", fontSize: 13 }}
+                >
+                  {t("settings.otp_cancel_btn")}
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  style={{ padding: "8px 16px", fontSize: 13 }}
+                >
+                  {t("settings.otp_verify_btn")}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }
