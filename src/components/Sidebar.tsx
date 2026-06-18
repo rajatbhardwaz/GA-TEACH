@@ -86,6 +86,21 @@ export default function Sidebar() {
           </Link>
         ))}
 
+        {/* Approvals section — visible to teachers and admins */}
+        {(userData?.role === "teacher" || userData?.role === "admin") && (
+          <>
+            <div className="sidebar-section-label" style={{ marginTop: 8 }}>Faculty / Admin</div>
+            <Link
+              href="/approvals"
+              className={`sidebar-item ${isActive("/approvals") ? "active" : ""}`}
+              onClick={() => setMobileOpen(false)}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="2" y="4" width="20" height="16" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /></svg>
+              Payment Approvals
+            </Link>
+          </>
+        )}
+
         {/* Admin section — only visible to admin */}
         {isAdmin && (
           <>

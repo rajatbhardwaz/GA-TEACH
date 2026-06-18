@@ -23,6 +23,9 @@ export default function CreateRoomModal({ isOpen, onClose, onRoomCreated }: Crea
   const [roomName, setRoomName] = useState("");
   const [subject, setSubject] = useState("");
   const [scheduledAt, setScheduledAt] = useState("");
+  const [isPaid, setIsPaid] = useState(false);
+  const [price, setPrice] = useState("");
+  const [upiId, setUpiId] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -55,11 +58,17 @@ export default function CreateRoomModal({ isOpen, onClose, onRoomCreated }: Crea
         scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : null,
         participants: [],
         isActive: false,
+        isPaid,
+        price: isPaid ? Number(price) : 0,
+        upiId: isPaid ? upiId : "",
       });
 
       setRoomName("");
       setScheduledAt("");
       setSubject("");
+      setIsPaid(false);
+      setPrice("");
+      setUpiId("");
       onRoomCreated();
       onClose();
     } catch (err) {
@@ -146,6 +155,48 @@ export default function CreateRoomModal({ isOpen, onClose, onRoomCreated }: Crea
               className="input-field"
             />
           </div>
+
+          {/* Is Paid Toggle */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "8px 0" }}>
+            <input
+              type="checkbox"
+              id="isPaid"
+              checked={isPaid}
+              onChange={(e) => setIsPaid(e.target.checked)}
+              style={{ width: 18, height: 18, cursor: "pointer" }}
+            />
+            <label htmlFor="isPaid" style={{ fontSize: 14, fontWeight: 500, color: "var(--color-text-primary)", cursor: "pointer" }}>
+              Paid Batch (Requires Student Payment)
+            </label>
+          </div>
+
+          {isPaid && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: 12, borderRadius: "var(--radius-md)", background: "var(--bg-elevated)", border: "1px solid var(--border)" }}>
+              <div>
+                <label className="field-label">Price (INR)</label>
+                <input
+                  type="number"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  required={isPaid}
+                  min={1}
+                  placeholder="e.g. 999"
+                  className="input-field"
+                />
+              </div>
+              <div>
+                <label className="field-label">Direct UPI ID for Payments</label>
+                <input
+                  type="text"
+                  value={upiId}
+                  onChange={(e) => setUpiId(e.target.value)}
+                  required={isPaid}
+                  placeholder="e.g. teacher@upi"
+                  className="input-field"
+                />
+              </div>
+            </div>
+          )}
 
           <div className="flex gap-3 justify-end" style={{ paddingTop: 8 }}>
             <button type="button" onClick={onClose} className="btn-secondary">

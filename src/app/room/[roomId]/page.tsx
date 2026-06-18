@@ -45,9 +45,33 @@ export default function RoomDetailPage() {
 
   const copyCode = () => { if (room) { navigator.clipboard.writeText(room.roomCode); setCopied(true); setTimeout(() => setCopied(false), 2000); } };
   const isTeacher = (userData?.role === "teacher" || userData?.role === "admin") && userData?.uid === room?.teacherId;
+  const isParticipant = room?.participants?.includes(userData?.uid || "");
+  const hasAccess = userData?.role === "admin" || isTeacher || isParticipant;
 
   if (authLoading || loadingRoom) return (<div style={{ minHeight: "100vh", background: "var(--bg-base)", display: "flex", alignItems: "center", justifyContent: "center" }}><div className="spinner" /></div>);
   if (!room) return (<div style={{ minHeight: "100vh", background: "var(--bg-base)", display: "flex", alignItems: "center", justifyContent: "center" }}><div className="empty-state"><h3>Batch not found</h3><p>This batch may have been removed.</p><button className="btn-primary" style={{ marginTop: 16 }} onClick={() => router.push("/dashboard")}>Back to Dashboard</button></div></div>);
+
+  if (!hasAccess) {
+    return (
+      <div style={{ minHeight: "100vh", background: "var(--bg-base)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+        <div className="card empty-state" style={{ maxWidth: 440, padding: 32, textAlign: "center" }}>
+          <div style={{ width: 64, height: 64, borderRadius: "50%", background: "var(--red-light)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--red)" strokeWidth="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+          </div>
+          <h3 style={{ fontSize: 18, fontWeight: 600, color: "var(--text-primary)", marginBottom: 8 }}>Access Restricted</h3>
+          <p style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: 20 }}>
+            You are not enrolled in this batch, or your enrollment is awaiting manual payment approval. Please join using the batch code or check with your teacher.
+          </p>
+          <button className="btn-primary" style={{ margin: "0 auto" }} onClick={() => router.push("/dashboard")}>
+            Back to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <DashboardLayout title={room.roomName}>
