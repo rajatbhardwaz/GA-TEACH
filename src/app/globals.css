@@ -1121,7 +1121,7 @@ a:hover {
   height: 40px;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  background: rgba(9, 9, 11, 0.85);
+  background: var(--bg-elevated);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   cursor: pointer;
@@ -1519,6 +1519,11 @@ body,
 
   /* Two-column layouts → stack */
   .dash-two-col {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* At a Glance grid → single column */
+  .at-a-glance-grid {
     grid-template-columns: 1fr !important;
   }
 

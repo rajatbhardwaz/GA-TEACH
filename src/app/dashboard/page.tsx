@@ -256,7 +256,7 @@ export default function DashboardPage() {
               <h3 style={{ fontSize: 15, fontWeight: 600, color: "var(--text-primary)", marginBottom: 22, letterSpacing: "-0.01em" }}>
                 {t("dash.at_a_glance")}
               </h3>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+              <div className="at-a-glance-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                 {/* Active Batches */}
                 <div style={{ padding: 18, borderRadius: "var(--radius-md)", background: "var(--bg-base)", border: "1px solid var(--border)", transition: "all 200ms ease" }}
                   onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--border-light)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
