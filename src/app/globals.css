@@ -1472,8 +1472,8 @@ body,
   }
 
   .stat-card {
-    padding: 20px !important;
-    gap: 16px !important;
+    padding: 16px !important;
+    gap: 12px !important;
   }
 
   .stat-value {
@@ -1804,8 +1804,8 @@ body,
   }
 
   .stat-card {
-    padding: 20px !important;
-    gap: 16px !important;
+    padding: 16px !important;
+    gap: 12px !important;
   }
 
   .stat-value {
