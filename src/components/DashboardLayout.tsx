@@ -150,12 +150,12 @@ export default function DashboardLayout({ children, title, wide }: DashboardLayo
               {showNotifDropdown && (
                 <div style={{
                   position: "absolute", top: 38, right: 0, width: 340,
-                  background: "rgba(24, 24, 27, 0.88)",
+                  background: "var(--bg-elevated)",
                   backdropFilter: "blur(24px) saturate(1.4)",
                   WebkitBackdropFilter: "blur(24px) saturate(1.4)",
                   border: "1px solid var(--border-light)",
                   borderRadius: "var(--radius-lg)",
-                  boxShadow: "0 16px 48px rgba(0,0,0,0.35), 0 0 0 1px var(--border)",
+                  boxShadow: "var(--shadow-lg)",
                   zIndex: 100, overflow: "hidden",
                   animation: "modal-in 180ms cubic-bezier(0.16, 1, 0.3, 1)",
                 }}>
