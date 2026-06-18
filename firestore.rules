@@ -42,5 +42,15 @@ service cloud.firestore {
       allow update: if request.auth != null;
       allow delete: if request.auth != null;
     }
+
+    // ─── Enrollment Requests ───
+    match /enrollmentRequests/{requestId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // ─── Payment Requests ───
+    match /paymentRequests/{requestId} {
+      allow read, write: if request.auth != null;
+    }
   }
 }
