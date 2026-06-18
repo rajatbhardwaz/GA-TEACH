@@ -1800,21 +1800,21 @@ body,
   /* Stats → single column, smaller min width, smaller padding */
   .stats-grid {
     grid-template-columns: 1fr !important;
-    gap: 12px !important;
+    gap: 10px !important;
   }
 
   .stat-card {
-    padding: 20px !important;
-    gap: 16px !important;
+    padding: 16px !important;
+    gap: 12px !important;
   }
 
   .stat-value {
-    font-size: 36px !important;
+    font-size: 28px !important;
   }
 
   .stat-icon {
-    width: 40px !important;
-    height: 40px !important;
+    width: 36px !important;
+    height: 36px !important;
   }
 
   .recordings-grid {

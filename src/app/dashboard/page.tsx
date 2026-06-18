@@ -198,11 +198,11 @@ export default function DashboardPage() {
         {/* Massive Hero Stats Grid */}
         <div className="stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "clamp(12px, 2vw, 24px)", marginBottom: 48 }}>
           {stats.map((s, i) => (
-            <div key={s.label} className="glass-card stat-card" style={{ padding: "clamp(20px, 4vw, 32px)", display: "flex", flexDirection: "column", gap: "clamp(16px, 3vw, 24px)", animationDelay: `${i * 60}ms`, animation: `stagger-in 400ms ease-out ${i * 60}ms both` }}>
-              <div className="stat-icon" style={{ width: 48, height: 48, borderRadius: 12, background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", color: s.color }}>{s.icon}</div>
+            <div key={s.label} className="glass-card stat-card" style={{ padding: "clamp(16px, 3vw, 32px)", display: "flex", flexDirection: "column", gap: "clamp(12px, 2.5vw, 24px)", animationDelay: `${i * 60}ms`, animation: `stagger-in 400ms ease-out ${i * 60}ms both` }}>
+              <div className="stat-icon" style={{ width: "clamp(36px, 7vw, 48px)", height: "clamp(36px, 7vw, 48px)", borderRadius: 12, background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", color: s.color }}>{s.icon}</div>
               <div>
-                <p className="stat-value" style={{ fontSize: "clamp(32px, 8vw, 48px)", fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1, marginBottom: 8, background: `linear-gradient(135deg, #fff, ${s.color})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{s.value}</p>
-                <p style={{ fontSize: 14, fontWeight: 500, color: "var(--text-secondary)" }}>{s.label}</p>
+                <p className="stat-value" style={{ fontSize: "clamp(28px, 6vw, 48px)", fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1, marginBottom: 8, background: `linear-gradient(135deg, #fff, ${s.color})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{s.value}</p>
+                <p style={{ fontSize: "clamp(12px, 2.5vw, 14px)", fontWeight: 500, color: "var(--text-secondary)" }}>{s.label}</p>
               </div>
             </div>
           ))}
