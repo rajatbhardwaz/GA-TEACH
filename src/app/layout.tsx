@@ -16,6 +16,11 @@ export const metadata: Metadata = {
   title: "Glorious Amplification — Online Learning Platform",
   description:
     "Online classroom platform with video meetings, attendance tracking, recordings, and batch management by Glorious Amplification.",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+  },
   icons: {
     icon: [
       { url: "/icon-192x192.png", sizes: "192x192", type: "image/png" },
