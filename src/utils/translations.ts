@@ -39,6 +39,7 @@ export const translations = {
     "topbar.days_ago": "{days}d ago",
 
     // Dashboard Page
+    "dash.title": "Dashboard",
     "dash.live_classes": "Live Classes",
     "dash.live_now": "Live Now",
     "dash.join_class_now": "Join Class Now →",
@@ -206,6 +207,7 @@ export const translations = {
     "topbar.days_ago": "{days} दिन पहले",
 
     // Dashboard Page
+    "dash.title": "डैशबोर्ड",
     "dash.live_classes": "लाइव क्लासेस",
     "dash.live_now": "अभी लाइव",
     "dash.join_class_now": "अभी क्लास में शामिल हों →",
@@ -365,6 +367,7 @@ export const translations = {
     "topbar.mins_ago": "Hace {mins}m",
     "topbar.hours_ago": "Hace {hours}h",
     "topbar.days_ago": "Hace {days}d",
+    "dash.title": "Tablero",
     "dash.live_classes": "Clases en Vivo",
     "dash.live_now": "En Vivo Ahora",
     "dash.join_class_now": "Unirse a Clase Ahora →",
@@ -510,6 +513,7 @@ export const translations = {
     "topbar.mins_ago": "Il y a {mins}m",
     "topbar.hours_ago": "Il y a {hours}h",
     "topbar.days_ago": "Il y a {days}j",
+    "dash.title": "Tableau de bord",
     "dash.live_classes": "Cours en Direct",
     "dash.live_now": "En Direct",
     "dash.join_class_now": "Rejoindre le Cours →",
