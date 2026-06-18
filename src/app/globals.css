@@ -1472,17 +1472,17 @@ body,
   }
 
   .stat-card {
-    padding: 16px !important;
-    gap: 12px !important;
+    padding: 20px !important;
+    gap: 16px !important;
   }
 
   .stat-value {
-    font-size: 20px !important;
+    font-size: 32px !important;
   }
 
   .stat-icon {
-    width: 38px !important;
-    height: 38px !important;
+    width: 44px !important;
+    height: 44px !important;
   }
 
   /* Dashboard header → stack with more breathing room */
@@ -1804,17 +1804,17 @@ body,
   }
 
   .stat-card {
-    padding: 16px !important;
-    gap: 12px !important;
+    padding: 20px !important;
+    gap: 16px !important;
   }
 
   .stat-value {
-    font-size: 28px !important;
+    font-size: 36px !important;
   }
 
   .stat-icon {
-    width: 36px !important;
-    height: 36px !important;
+    width: 44px !important;
+    height: 44px !important;
   }
 
   .recordings-grid {
