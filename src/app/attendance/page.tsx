@@ -322,82 +322,80 @@ export default function AttendancePage() {
             <p>{searchTerm ? "" : t("attend.no_records_desc")}</p>
           </div>
         ) : (
-          <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-            {/* header */}
-            <div
-              style={{
-                display: "grid", gridTemplateColumns: "2fr 1.2fr 0.8fr 1fr 1fr 0.8fr",
-                padding: "14px 20px", background: "var(--bg-elevated)", borderBottom: "1px solid var(--border)",
-                fontSize: 12, fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", gap: 12,
-              }}
-            >
-              <span>{t("attend.col_name")}</span>
-              <span>{t("attend.col_batches")}</span>
-              <span>{t("attend.col_lectures")}</span>
-              <span>{t("attend.col_study_time")}</span>
-              <span>{t("attend.col_last_active")}</span>
-              <span>{t("attend.col_actions")}</span>
-            </div>
-            {/* rows */}
-            {displayStudents.map((student, index) => (
-              <div
-                key={student.userId}
-                style={{
-                  display: "grid", gridTemplateColumns: "2fr 1.2fr 0.8fr 1fr 1fr 0.8fr",
-                  padding: "14px 20px",
-                  borderBottom: index < displayStudents.length - 1 ? "1px solid var(--border)" : "none",
-                  alignItems: "center", gap: 12, transition: "background var(--transition-fast)",
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-hover)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-              >
-                {/* name */}
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{
-                    width: 32, height: 32, borderRadius: "var(--radius-full)",
-                    background: "linear-gradient(135deg, var(--blue), #818cf8)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 12, fontWeight: 600, color: "#fff", flexShrink: 0,
-                  }}>
-                    {student.userName.charAt(0).toUpperCase()}
-                  </div>
-                  <span style={{ fontSize: 14, fontWeight: 500, color: "var(--text-primary)" }}>{student.userName}</span>
-                </div>
-                {/* batches */}
-                <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-                  {student.batches.slice(0, 2).map((b) => (
-                    <span key={b.roomId} className="badge badge-student" style={{ fontSize: 10, padding: "2px 8px" }}>
-                      {b.roomName}
-                    </span>
-                  ))}
-                  {student.batches.length > 2 && (
-                    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>+{student.batches.length - 2}</span>
-                  )}
-                </div>
-                {/* lectures */}
-                <span style={{ fontSize: 14, fontWeight: 500, color: "var(--text-primary)" }}>{student.totalLectures}</span>
-                {/* study time */}
-                <span style={{ fontSize: 14, fontWeight: 500, color: student.totalDuration > 0 ? "var(--green)" : "var(--text-muted)" }}>
-                  {student.totalDuration > 0 ? formatDuration(student.totalDuration) : "—"}
-                </span>
-                {/* last active */}
-                <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>{formatDate(student.lastActive)}</span>
-                {/* action */}
-                <button
-                  onClick={() => setSelectedStudent(student)}
-                  style={{
-                    padding: "6px 14px", borderRadius: "var(--radius-md)",
-                    border: "1px solid var(--border-light)", background: "transparent",
-                    color: "var(--blue)", fontSize: 12, fontWeight: 500, cursor: "pointer",
-                    transition: "all var(--transition-fast)",
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = "var(--blue-light)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-                >
-                  {t("attend.view_details")}
-                </button>
-              </div>
-            ))}
+          <div className="card" style={{ padding: 0, overflow: "hidden", overflowX: "auto" }}>
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>{t("attend.col_name")}</th>
+                  <th>{t("attend.col_batches")}</th>
+                  <th>{t("attend.col_lectures")}</th>
+                  <th>{t("attend.col_study_time")}</th>
+                  <th>{t("attend.col_last_active")}</th>
+                  <th style={{ textAlign: "right" }}>{t("attend.col_actions")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {displayStudents.map((student) => (
+                  <tr key={student.userId}>
+                    {/* name */}
+                    <td>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <div style={{
+                          width: 32, height: 32, borderRadius: "var(--radius-full)",
+                          background: "linear-gradient(135deg, var(--blue), #818cf8)",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: 12, fontWeight: 600, color: "#fff", flexShrink: 0,
+                        }}>
+                          {student.userName.charAt(0).toUpperCase()}
+                        </div>
+                        <span style={{ fontWeight: 500 }}>{student.userName}</span>
+                      </div>
+                    </td>
+                    {/* batches */}
+                    <td>
+                      <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                        {student.batches.slice(0, 2).map((b) => (
+                          <span key={b.roomId} className="badge badge-student" style={{ fontSize: 10, padding: "3px 8px" }}>
+                            {b.roomName}
+                          </span>
+                        ))}
+                        {student.batches.length > 2 && (
+                          <span style={{ fontSize: 11, color: "var(--text-muted)", marginLeft: 2, display: "flex", alignItems: "center" }}>
+                            +{student.batches.length - 2}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    {/* lectures */}
+                    <td style={{ fontWeight: 500 }}>{student.totalLectures}</td>
+                    {/* study time */}
+                    <td style={{ fontWeight: 500, color: student.totalDuration > 0 ? "var(--green)" : "var(--text-muted)" }}>
+                      {student.totalDuration > 0 ? formatDuration(student.totalDuration) : "—"}
+                    </td>
+                    {/* last active */}
+                    <td style={{ fontSize: 13, color: "var(--text-secondary)" }}>
+                      {formatDate(student.lastActive)}
+                    </td>
+                    {/* action */}
+                    <td style={{ textAlign: "right" }}>
+                      <button
+                        onClick={() => setSelectedStudent(student)}
+                        style={{
+                          padding: "6px 14px", borderRadius: "var(--radius-md)",
+                          border: "1px solid var(--border-light)", background: "transparent",
+                          color: "var(--blue)", fontSize: 12, fontWeight: 500, cursor: "pointer",
+                          transition: "all var(--transition-bounce)",
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--blue-light)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.transform = "none"; }}
+                      >
+                        {t("attend.view_details")}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>

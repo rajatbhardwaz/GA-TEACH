@@ -133,6 +133,24 @@ export default function DashboardPage() {
     return h < 12 ? "greeting.morning" : h < 17 ? "greeting.afternoon" : "greeting.evening";
   };
 
+  const getGreetingEmoji = (): string => {
+    const h = new Date().getHours();
+    return h < 12 ? "🌅" : h < 17 ? "☀️" : "🌙";
+  };
+
+  const getContextLine = (): string => {
+    if (isTeacher) {
+      if (liveRooms.length > 0) return `${liveRooms.length} live class${liveRooms.length > 1 ? "es" : ""} running now • ${rooms.length} batch${rooms.length !== 1 ? "es" : ""} total`;
+      if (upcomingRooms.length > 0) return `${upcomingRooms.length} upcoming session${upcomingRooms.length > 1 ? "s" : ""} • ${totalStudents} student${totalStudents !== 1 ? "s" : ""} enrolled`;
+      if (rooms.length > 0) return `${rooms.length} batch${rooms.length !== 1 ? "es" : ""} active • ${totalStudents} student${totalStudents !== 1 ? "s" : ""} enrolled`;
+      return "Create your first batch and start teaching.";
+    } else {
+      if (liveRooms.length > 0) return `${liveRooms.length} live class${liveRooms.length > 1 ? "es" : ""} available now — jump in!`;
+      if (rooms.length > 0) return `You're enrolled in ${rooms.length} batch${rooms.length !== 1 ? "es" : ""}. Keep learning!`;
+      return "Join a batch to get started with your learning journey.";
+    }
+  };
+
   const stats = [
     {
       label: isTeacher ? t("stats.total_batches") : t("stats.enrolled_batches"), value: rooms.length, color: "var(--blue)", bg: "var(--blue-light)",
@@ -156,13 +174,16 @@ export default function DashboardPage() {
     <DashboardLayout title={t("dash.title")}>
       <div className="page-enter">
         {/* Greeting + Actions */}
-        <div className="dash-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32, gap: 16, flexWrap: "wrap" }}>
+        <div className="dash-header" style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 36, gap: 16, flexWrap: "wrap" }}>
           <div>
-            <h1 style={{ fontSize: 26, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
-              {t(getGreetingKey())}, {userData.name.split(" ")[0]} 🎯
+            <h1 style={{ fontSize: 28, fontWeight: 700, color: "var(--text-primary)", marginBottom: 6, letterSpacing: "-0.02em" }}>
+              {t(getGreetingKey())}, {userData.name.split(" ")[0]} {getGreetingEmoji()}
             </h1>
-            <p style={{ fontSize: 14, color: "var(--text-secondary)" }}>
+            <p style={{ fontSize: 14, color: "var(--text-secondary)", marginBottom: 4 }}>
               {todayStr}
+            </p>
+            <p style={{ fontSize: 13, color: "var(--text-muted)", lineHeight: 1.5 }}>
+              {getContextLine()}
             </p>
           </div>
           <div className="dash-actions" style={{ display: "flex", gap: 12 }}>
@@ -174,9 +195,9 @@ export default function DashboardPage() {
         </div>
 
         {/* Stats Grid */}
-        <div className="stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 32 }}>
-          {stats.map(s => (
-            <div key={s.label} className="stat-card">
+        <div className="stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 18, marginBottom: 36 }}>
+          {stats.map((s, i) => (
+            <div key={s.label} className="stat-card" style={{ animationDelay: `${i * 60}ms`, animation: `stagger-in 400ms ease-out ${i * 60}ms both` }}>
               <div className="stat-icon" style={{ background: s.bg, color: s.color }}>{s.icon}</div>
               <div>
                 <p className="stat-value">{s.value}</p>
@@ -196,8 +217,9 @@ export default function DashboardPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {liveRooms.map(room => (
                 <div key={room.id} className="card live-banner" style={{
-                  padding: "16px 24px", borderLeft: "3px solid var(--green)",
+                  padding: "18px 24px", borderLeft: "3px solid var(--green)",
                   display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12,
+                  boxShadow: "0 0 0 1px rgba(34, 197, 94, 0.1), 0 0 24px rgba(34, 197, 94, 0.06)",
                 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     <span className="badge badge-live">{t("dash.live_now")}</span>
@@ -226,17 +248,20 @@ export default function DashboardPage() {
         )}
 
         {/* Two-column layout: Overview + Sidebar */}
-        <div className="dash-two-col" style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 24, alignItems: "start" }}>
+        <div className="dash-two-col" style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 28, alignItems: "start" }}>
           {/* Left: Overview Section */}
           <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
             {/* At a Glance */}
-            <div className="card" style={{ padding: 24 }}>
-              <h3 style={{ fontSize: 15, fontWeight: 600, color: "var(--text-primary)", marginBottom: 20 }}>
+            <div className="card" style={{ padding: 28 }}>
+              <h3 style={{ fontSize: 15, fontWeight: 600, color: "var(--text-primary)", marginBottom: 22, letterSpacing: "-0.01em" }}>
                 {t("dash.at_a_glance")}
               </h3>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                 {/* Active Batches */}
-                <div style={{ padding: 16, borderRadius: "var(--radius-md)", background: "var(--bg-elevated)", border: "1px solid var(--border)" }}>
+                <div style={{ padding: 18, borderRadius: "var(--radius-md)", background: "var(--bg-base)", border: "1px solid var(--border)", transition: "all 200ms ease" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--border-light)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.transform = "none"; }}
+                >
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--green)" }} />
                     <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-secondary)" }}>{t("dash.active_batches")}</span>
@@ -250,7 +275,10 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Paused Batches */}
-                <div style={{ padding: 16, borderRadius: "var(--radius-md)", background: "var(--bg-elevated)", border: "1px solid var(--border)" }}>
+                <div style={{ padding: 18, borderRadius: "var(--radius-md)", background: "var(--bg-base)", border: "1px solid var(--border)", transition: "all 200ms ease" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--border-light)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.transform = "none"; }}
+                >
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--yellow)" }} />
                     <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-secondary)" }}>{t("dash.paused_batches")}</span>
@@ -264,7 +292,10 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Upcoming */}
-                <div style={{ padding: 16, borderRadius: "var(--radius-md)", background: "var(--bg-elevated)", border: "1px solid var(--border)" }}>
+                <div style={{ padding: 18, borderRadius: "var(--radius-md)", background: "var(--bg-base)", border: "1px solid var(--border)", transition: "all 200ms ease" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--border-light)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.transform = "none"; }}
+                >
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--blue)" }} />
                     <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-secondary)" }}>{t("dash.upcoming_title")}</span>
@@ -278,7 +309,10 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Total Students / Completed */}
-                <div style={{ padding: 16, borderRadius: "var(--radius-md)", background: "var(--bg-elevated)", border: "1px solid var(--border)" }}>
+                <div style={{ padding: 18, borderRadius: "var(--radius-md)", background: "var(--bg-base)", border: "1px solid var(--border)", transition: "all 200ms ease" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--border-light)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.transform = "none"; }}
+                >
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--purple)" }} />
                     <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-secondary)" }}>{isTeacher ? t("stats.total_students") : t("stats.completed_sessions")}</span>
@@ -294,9 +328,9 @@ export default function DashboardPage() {
             </div>
 
             {/* Recent Batches (top 3 only) */}
-            <div className="card" style={{ padding: 24 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-                <h3 style={{ fontSize: 15, fontWeight: 600, color: "var(--text-primary)" }}>{t("dash.recent_batches")}</h3>
+            <div className="card" style={{ padding: 28 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+                <h3 style={{ fontSize: 15, fontWeight: 600, color: "var(--text-primary)", letterSpacing: "-0.01em" }}>{t("dash.recent_batches")}</h3>
                 <Link href="/batches" style={{ fontSize: 13, color: "var(--blue)", textDecoration: "none", fontWeight: 500 }}>
                   {t("dash.view_all")}
                 </Link>
@@ -351,10 +385,10 @@ export default function DashboardPage() {
           </div>
 
           {/* Right: Sidebar panels */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
             {/* Quick Actions */}
-            <div className="card" style={{ padding: 20 }}>
-              <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)", marginBottom: 16 }}>{t("dash.quick_actions")}</h3>
+            <div className="card" style={{ padding: 22 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)", marginBottom: 16, letterSpacing: "-0.01em" }}>{t("dash.quick_actions")}</h3>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {isTeacher ? (
                   <>
@@ -399,8 +433,8 @@ export default function DashboardPage() {
             </div>
 
             {/* Recent Activity */}
-            <div className="card" style={{ padding: 20 }}>
-              <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)", marginBottom: 16 }}>{t("dash.recent_activity")}</h3>
+            <div className="card" style={{ padding: 22 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)", marginBottom: 16, letterSpacing: "-0.01em" }}>{t("dash.recent_activity")}</h3>
               {rooms.length === 0 ? (
                 <p style={{ fontSize: 13, color: "var(--text-muted)" }}>{t("dash.no_recent_activity")}</p>
               ) : (
@@ -422,7 +456,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Motivational Card */}
-            <div className="card" style={{ padding: 20, background: "var(--blue-light)", borderColor: "rgba(59,130,246,0.15)" }}>
+            <div className="card" style={{ padding: 22, background: "var(--blue-light)", borderColor: "rgba(59,130,246,0.15)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
                 <img src="/logo.png" alt="GA" style={{ width: 30, height: 30, objectFit: "contain" }} />
                 <span style={{ fontSize: 13, fontWeight: 600, color: "var(--blue)" }}>Glorious Amplification</span>

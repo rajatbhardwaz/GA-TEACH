@@ -149,10 +149,15 @@ export default function DashboardLayout({ children, title, wide }: DashboardLayo
 
               {showNotifDropdown && (
                 <div style={{
-                  position: "absolute", top: 38, right: 0, width: 320,
-                  background: "var(--bg-card)", border: "1px solid var(--border)",
-                  borderRadius: "var(--radius-lg)", boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
-                  zIndex: 100, overflow: "hidden"
+                  position: "absolute", top: 38, right: 0, width: 340,
+                  background: "rgba(24, 24, 27, 0.88)",
+                  backdropFilter: "blur(24px) saturate(1.4)",
+                  WebkitBackdropFilter: "blur(24px) saturate(1.4)",
+                  border: "1px solid var(--border-light)",
+                  borderRadius: "var(--radius-lg)",
+                  boxShadow: "0 16px 48px rgba(0,0,0,0.35), 0 0 0 1px var(--border)",
+                  zIndex: 100, overflow: "hidden",
+                  animation: "modal-in 180ms cubic-bezier(0.16, 1, 0.3, 1)",
                 }}>
                   {/* Dropdown Header */}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", borderBottom: "1px solid var(--border)", background: "var(--bg-elevated)" }}>
@@ -217,7 +222,21 @@ export default function DashboardLayout({ children, title, wide }: DashboardLayo
 
             {/* User pill */}
             {userData && (
-              <div className="topbar-user-pill" style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 10px 4px 4px", borderRadius: "var(--radius-full)", background: "var(--bg-elevated)", border: "1px solid var(--border)" }}>
+              <div className="topbar-user-pill" style={{
+                display: "flex", alignItems: "center", gap: 8,
+                padding: "4px 12px 4px 4px", borderRadius: "var(--radius-full)",
+                background: "var(--bg-elevated)", border: "1px solid var(--border)",
+                transition: "all 200ms ease", cursor: "pointer",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "rgba(59, 130, 246, 0.3)";
+                e.currentTarget.style.boxShadow = "0 0 0 3px rgba(59, 130, 246, 0.08)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "var(--border)";
+                e.currentTarget.style.boxShadow = "none";
+              }}
+              >
                 <div className="user-avatar" style={{
                   width: 28, height: 28, borderRadius: "var(--radius-full)",
                   background: userData.role === "admin"
