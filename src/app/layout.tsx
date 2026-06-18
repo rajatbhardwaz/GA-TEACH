@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { LanguageProvider } from "@/context/LanguageContext";
 import SplashWrapper from "@/components/SplashWrapper";
 
 const inter = Inter({
@@ -27,7 +28,9 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col antialiased">
         <ThemeProvider>
           <AuthProvider>
-            <SplashWrapper>{children}</SplashWrapper>
+            <LanguageProvider>
+              <SplashWrapper>{children}</SplashWrapper>
+            </LanguageProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

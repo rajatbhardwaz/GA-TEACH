@@ -8,6 +8,7 @@ import { db, auth } from "@/firebase/config";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useProtectedRoute } from "@/hooks/useProtectedRoute";
+import { useLanguage, Language } from "@/context/LanguageContext";
 import DashboardLayout from "@/components/DashboardLayout";
 
 export default function SettingsPage() {
@@ -32,7 +33,7 @@ export default function SettingsPage() {
   const [passwordSuccess, setPasswordSuccess] = useState("");
 
   // Language state
-  const [language, setLanguage] = useState("en");
+  const { language, changeLanguage, t } = useLanguage();
 
   // Sync state with userData on load
   useEffect(() => {
@@ -43,15 +44,8 @@ export default function SettingsPage() {
     }
   }, [userData]);
 
-  // Read saved language preference from local storage
-  useEffect(() => {
-    const savedLang = localStorage.getItem("ga-language") || "en";
-    setLanguage(savedLang);
-  }, []);
-
   const handleLanguageChange = (lang: string) => {
-    setLanguage(lang);
-    localStorage.setItem("ga-language", lang);
+    changeLanguage(lang as Language);
   };
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
@@ -79,7 +73,7 @@ export default function SettingsPage() {
       }, { merge: true });
 
       await refreshUserData();
-      setSuccessMsg("Profile information updated successfully!");
+      setSuccessMsg(t("settings.profile_success"));
     } catch (err: any) {
       console.error(err);
       if (err.code === "auth/requires-recent-login") {
@@ -114,7 +108,7 @@ export default function SettingsPage() {
       await updatePassword(auth.currentUser, newPassword);
       setNewPassword("");
       setConfirmPassword("");
-      setPasswordSuccess("Password changed successfully!");
+      setPasswordSuccess(t("settings.password_success"));
     } catch (err: any) {
       console.error(err);
       if (err.code === "auth/requires-recent-login") {
@@ -148,21 +142,21 @@ export default function SettingsPage() {
   if (!userData) {
     return (
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg-base)" }}>
-        <p style={{ color: "var(--text-secondary)" }}>Unable to load profile settings.</p>
+        <p style={{ color: "var(--text-secondary)" }}>{t("settings.unable_load")}</p>
       </div>
     );
   }
 
   return (
-    <DashboardLayout title="Settings">
+    <DashboardLayout title={t("nav.settings")}>
       <div className="page-enter" style={{ maxWidth: 800, margin: "0 auto" }}>
         {/* Header */}
         <div style={{ marginBottom: 28 }}>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
-            System Settings ⚙️
+            {t("settings.title")}
           </h1>
           <p style={{ fontSize: 14, color: "var(--text-secondary)" }}>
-            Configure your application preferences, profile information, and security credentials.
+            {t("settings.subtitle")}
           </p>
         </div>
 
@@ -170,15 +164,15 @@ export default function SettingsPage() {
           {/* General Preferences Card */}
           <div className="card" style={{ padding: 24 }}>
             <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--text-primary)", marginBottom: 20 }}>
-              General Preferences
+              {t("settings.general_pref")}
             </h2>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               {/* Theme Toggle */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
                 <div>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>Theme Color Mode</p>
-                  <p style={{ fontSize: 12, color: "var(--text-muted)" }}>Toggle between light and dark visual mode appearance.</p>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>{t("settings.theme_mode")}</p>
+                  <p style={{ fontSize: 12, color: "var(--text-muted)" }}>{t("settings.theme_desc")}</p>
                 </div>
                 <div
                   onClick={toggleTheme}
@@ -233,8 +227,8 @@ export default function SettingsPage() {
               {/* Language Selection */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
                 <div>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>Language Preference</p>
-                  <p style={{ fontSize: 12, color: "var(--text-muted)" }}>Change interface display language.</p>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>{t("settings.lang_pref")}</p>
+                  <p style={{ fontSize: 12, color: "var(--text-muted)" }}>{t("settings.lang_desc")}</p>
                 </div>
                 <select
                   className="select-field"
@@ -254,15 +248,15 @@ export default function SettingsPage() {
               {/* Account Management (Switch & Logout) */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
                 <div>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>Account Control</p>
-                  <p style={{ fontSize: 12, color: "var(--text-muted)" }}>Switch to a different account or sign out of your profile.</p>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>{t("settings.acc_control")}</p>
+                  <p style={{ fontSize: 12, color: "var(--text-muted)" }}>{t("settings.acc_desc")}</p>
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
                   <button className="btn-secondary" onClick={handleSwitchAccount} style={{ padding: "8px 16px", fontSize: 13 }}>
-                    Switch Account
+                    {t("settings.switch_account")}
                   </button>
                   <button className="btn-danger" onClick={handleLogout} style={{ padding: "8px 16px", fontSize: 13 }}>
-                    Log Out
+                    {t("settings.logout")}
                   </button>
                 </div>
               </div>
@@ -272,7 +266,7 @@ export default function SettingsPage() {
           {/* Edit Profile (Privacy & Credentials) */}
           <div className="card" style={{ padding: 24 }}>
             <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--text-primary)", marginBottom: 20 }}>
-              Privacy & Profile Credentials
+              {t("settings.privacy_profile")}
             </h2>
 
             {errorMsg && <div className="error-alert" style={{ marginBottom: 16 }}>{errorMsg}</div>}
@@ -280,7 +274,7 @@ export default function SettingsPage() {
 
             <form onSubmit={handleUpdateProfile} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <div>
-                <label className="field-label">Display Name</label>
+                <label className="field-label">{t("settings.display_name")}</label>
                 <input
                   type="text"
                   required
@@ -293,7 +287,7 @@ export default function SettingsPage() {
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, flexWrap: "wrap" }}>
                 <div>
-                  <label className="field-label">Email Address</label>
+                  <label className="field-label">{t("settings.email_address")}</label>
                   <input
                     type="email"
                     required
@@ -304,7 +298,7 @@ export default function SettingsPage() {
                   />
                 </div>
                 <div>
-                  <label className="field-label">Phone Number</label>
+                  <label className="field-label">{t("settings.phone_number")}</label>
                   <input
                     type="tel"
                     value={phone}
@@ -317,7 +311,7 @@ export default function SettingsPage() {
 
               <div style={{ display: "flex", justifyContent: "flex-end", paddingTop: 8 }}>
                 <button type="submit" disabled={loading} className="btn-primary" style={{ padding: "10px 20px" }}>
-                  {loading ? "Saving changes..." : "Save Profile Details"}
+                  {loading ? t("settings.saving_details") : t("settings.save_details")}
                 </button>
               </div>
             </form>
@@ -326,7 +320,7 @@ export default function SettingsPage() {
           {/* Change Password Card */}
           <div className="card" style={{ padding: 24 }}>
             <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--text-primary)", marginBottom: 20 }}>
-              Security Settings (Change Password)
+              {t("settings.security_settings")}
             </h2>
 
             {passwordError && <div className="error-alert" style={{ marginBottom: 16 }}>{passwordError}</div>}
@@ -335,7 +329,7 @@ export default function SettingsPage() {
             <form onSubmit={handleUpdatePassword} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                 <div>
-                  <label className="field-label">New Password</label>
+                  <label className="field-label">{t("settings.new_password")}</label>
                   <input
                     type="password"
                     required
@@ -346,7 +340,7 @@ export default function SettingsPage() {
                   />
                 </div>
                 <div>
-                  <label className="field-label">Confirm New Password</label>
+                  <label className="field-label">{t("settings.confirm_password")}</label>
                   <input
                     type="password"
                     required
@@ -360,7 +354,7 @@ export default function SettingsPage() {
 
               <div style={{ display: "flex", justifyContent: "flex-end", paddingTop: 8 }}>
                 <button type="submit" disabled={passwordLoading} className="btn-primary" style={{ padding: "10px 20px" }}>
-                  {passwordLoading ? "Updating password..." : "Update Password"}
+                  {passwordLoading ? t("settings.updating_password") : t("settings.update_password")}
                 </button>
               </div>
             </form>

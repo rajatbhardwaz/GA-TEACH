@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { collection, query, where, onSnapshot, getDocs } from "firebase/firestore";
 import { db } from "@/firebase/config";
+import { useLanguage } from "@/context/LanguageContext";
 
 // Admin-only nav item
 const adminNav = {
@@ -103,21 +104,23 @@ export default function Sidebar() {
     return pathname.startsWith(href);
   };
 
+  const { t } = useLanguage();
+
   const navItems = [
     {
-      label: "Dashboard", href: "/dashboard",
+      labelKey: "nav.dashboard", href: "/dashboard",
       icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>,
     },
     {
-      label: "My Batches", href: "/batches",
+      labelKey: "nav.my_batches", href: "/batches",
       icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 19.5A2.5 2.5 0 016.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" /></svg>,
     },
     ...(userData?.role === "student" ? [{
-      label: "Enroll in Batch", href: "/enroll",
+      labelKey: "nav.enroll_batch", href: "/enroll",
       icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M12 8v8M8 12h8" /></svg>
     }] : []),
     {
-      label: "Lecture Recordings", href: "/recordings",
+      labelKey: "nav.lecture_recordings", href: "/recordings",
       icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10" /><polygon points="10,8 16,12 10,16" /></svg>,
     },
   ];
@@ -132,21 +135,21 @@ export default function Sidebar() {
 
       {/* Main nav */}
       <nav className="sidebar-nav">
-        <div className="sidebar-section-label">Learning</div>
+        <div className="sidebar-section-label">{t("nav.learning")}</div>
         {navItems.map((item) => (
           <Link
-            key={item.label}
+            key={item.labelKey}
             href={item.href}
             className={`sidebar-item ${isActive(item.href) ? "active" : ""}`}
             onClick={() => setMobileOpen(false)}
             style={{ display: "flex", alignItems: "center" }}
           >
             {item.icon}
-            <span>{item.label}</span>
-            {item.label === "My Batches" && userData?.role === "student" && studentLiveCount > 0 && (
+            <span>{t(item.labelKey)}</span>
+            {item.labelKey === "nav.my_batches" && userData?.role === "student" && studentLiveCount > 0 && (
               <span style={{ fontSize: 9, fontWeight: 700, background: "var(--red)", color: "#fff", padding: "2px 6px", borderRadius: "var(--radius-full)", marginLeft: "auto", textTransform: "uppercase", letterSpacing: "0.5px" }}>Live</span>
             )}
-            {item.label === "Enroll in Batch" && studentEnrollActionsCount > 0 && (
+            {item.labelKey === "nav.enroll_batch" && studentEnrollActionsCount > 0 && (
               <span style={{ fontSize: 10, fontWeight: 700, background: "var(--blue)", color: "#fff", padding: "1px 6px", borderRadius: "var(--radius-full)", marginLeft: "auto" }}>{studentEnrollActionsCount}</span>
             )}
           </Link>
@@ -155,7 +158,7 @@ export default function Sidebar() {
         {/* Approvals section — visible to teachers and admins */}
         {(userData?.role === "teacher" || userData?.role === "admin") && (
           <>
-            <div className="sidebar-section-label" style={{ marginTop: 8 }}>Faculty / Admin</div>
+            <div className="sidebar-section-label" style={{ marginTop: 8 }}>{t("nav.faculty_admin")}</div>
             <Link
               href="/enrollments"
               className={`sidebar-item ${isActive("/enrollments") ? "active" : ""}`}
@@ -163,7 +166,7 @@ export default function Sidebar() {
               style={{ display: "flex", alignItems: "center" }}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>
-              <span>Enrollment Requests</span>
+              <span>{t("nav.enrollment_requests")}</span>
               {pendingAccessCount > 0 && (
                 <span style={{ fontSize: 10, fontWeight: 700, background: "var(--yellow)", color: "#000", padding: "1px 6px", borderRadius: "var(--radius-full)", marginLeft: "auto" }}>{pendingAccessCount}</span>
               )}
@@ -175,7 +178,7 @@ export default function Sidebar() {
               style={{ display: "flex", alignItems: "center" }}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="2" y="4" width="20" height="16" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /></svg>
-              <span>Payment Approvals</span>
+              <span>{t("nav.payment_approvals")}</span>
               {pendingPaymentCount > 0 && (
                 <span style={{ fontSize: 10, fontWeight: 700, background: "var(--yellow)", color: "#000", padding: "1px 6px", borderRadius: "var(--radius-full)", marginLeft: "auto" }}>{pendingPaymentCount}</span>
               )}
@@ -186,14 +189,14 @@ export default function Sidebar() {
         {/* Admin section — only visible to admin */}
         {isAdmin && (
           <>
-            <div className="sidebar-section-label" style={{ marginTop: 8 }}>Administration</div>
+            <div className="sidebar-section-label" style={{ marginTop: 8 }}>{t("nav.administration")}</div>
             <Link
               href={adminNav.href}
               className={`sidebar-item ${isActive(adminNav.href) ? "active" : ""}`}
               onClick={() => setMobileOpen(false)}
             >
               {adminNav.icon}
-              {adminNav.label}
+              {t("nav.teacher_management")}
             </Link>
           </>
         )}
@@ -211,7 +214,7 @@ export default function Sidebar() {
             <circle cx="12" cy="12" r="3" />
             <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
           </svg>
-          Settings
+          {t("nav.settings")}
         </Link>
       </div>
     </>

@@ -5,6 +5,7 @@ import { collection, query, where, getDocs, doc, updateDoc, onSnapshot } from "f
 import { db } from "@/firebase/config";
 import { useAuth } from "@/context/AuthContext";
 import { useProtectedRoute } from "@/hooks/useProtectedRoute";
+import { useLanguage } from "@/context/LanguageContext";
 import DashboardLayout from "@/components/DashboardLayout";
 import CreateRoomModal from "@/components/CreateRoomModal";
 import JoinRoomModal from "@/components/JoinRoomModal";
@@ -22,6 +23,7 @@ interface Room {
 export default function DashboardPage() {
   const { loading: authLoading } = useProtectedRoute();
   const { userData } = useAuth();
+  const { language, t } = useLanguage();
   const router = useRouter();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loadingRooms, setLoadingRooms] = useState(true);
@@ -105,10 +107,10 @@ export default function DashboardPage() {
   if (!userData) {
     return (
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16, padding: 24, textAlign: "center", background: "var(--bg-base)" }}>
-        <p style={{ color: "var(--text-secondary)", fontSize: 15, maxWidth: 360 }}>Unable to load your profile.</p>
+        <p style={{ color: "var(--text-secondary)", fontSize: 15, maxWidth: 360 }}>{t("dash.unable_load_profile")}</p>
         <div style={{ display: "flex", gap: 10 }}>
-          <button className="btn-secondary" onClick={() => window.location.reload()}>Retry</button>
-          <a href="/login"><button className="btn-primary">Go to Login</button></a>
+          <button className="btn-secondary" onClick={() => window.location.reload()}>{t("dash.retry")}</button>
+          <a href="/login"><button className="btn-primary">{t("dash.go_login")}</button></a>
         </div>
       </div>
     );
@@ -124,35 +126,40 @@ export default function DashboardPage() {
 
   // Get today's date info
   const today = new Date();
-  const todayStr = today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+  const todayStr = today.toLocaleDateString(language === "hi" ? "hi-IN" : language === "es" ? "es-ES" : language === "fr" ? "fr-FR" : "en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+
+  const getGreetingKey = (): string => {
+    const h = new Date().getHours();
+    return h < 12 ? "greeting.morning" : h < 17 ? "greeting.afternoon" : "greeting.evening";
+  };
 
   const stats = [
     {
-      label: isTeacher ? "Total Batches" : "Enrolled Batches", value: rooms.length, color: "var(--blue)", bg: "var(--blue-light)",
+      label: isTeacher ? t("stats.total_batches") : t("stats.enrolled_batches"), value: rooms.length, color: "var(--blue)", bg: "var(--blue-light)",
       icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" /></svg>
     },
     {
-      label: "Live Now", value: liveRooms.length, color: "var(--green)", bg: "var(--green-light)",
+      label: t("stats.live_now"), value: liveRooms.length, color: "var(--green)", bg: "var(--green-light)",
       icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 7l-7 5 7 5V7z" /><rect x="1" y="5" width="15" height="14" rx="2" /></svg>
     },
     {
-      label: "Upcoming Sessions", value: upcomingRooms.length, color: "var(--yellow)", bg: "var(--yellow-light)",
+      label: t("stats.upcoming_sessions"), value: upcomingRooms.length, color: "var(--yellow)", bg: "var(--yellow-light)",
       icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polyline points="12,6 12,12 16,14" /></svg>
     },
     {
-      label: isTeacher ? "Total Students" : "Completed Sessions", value: isTeacher ? totalStudents : completedRooms.length, color: "var(--purple)", bg: "var(--purple-light)",
+      label: isTeacher ? t("stats.total_students") : t("stats.completed_sessions"), value: isTeacher ? totalStudents : completedRooms.length, color: "var(--purple)", bg: "var(--purple-light)",
       icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 00-3-3.87" /><path d="M16 3.13a4 4 0 010 7.75" /></svg>
     },
   ];
 
   return (
-    <DashboardLayout title="Dashboard">
+    <DashboardLayout title={t("dash.title")}>
       <div className="page-enter">
         {/* Greeting + Actions */}
         <div className="dash-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32, gap: 16, flexWrap: "wrap" }}>
           <div>
             <h1 style={{ fontSize: 26, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
-              {getGreeting()}, {userData.name.split(" ")[0]} 🎯
+              {t(getGreetingKey())}, {userData.name.split(" ")[0]} 🎯
             </h1>
             <p style={{ fontSize: 14, color: "var(--text-secondary)" }}>
               {todayStr}
@@ -161,7 +168,7 @@ export default function DashboardPage() {
           <div className="dash-actions" style={{ display: "flex", gap: 12 }}>
             <button className="btn-success" onClick={() => rooms.length > 0 ? setShowClassPicker(true) : (isTeacher ? setShowCreateModal(true) : setShowJoinModal(true))}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 7l-7 5 7 5V7z" /><rect x="1" y="5" width="15" height="14" rx="2" /></svg>
-              {isTeacher ? "Start Live Class" : "Join Live Class"}
+              {isTeacher ? t("dash.start_live") : t("dash.join_live")}
             </button>
           </div>
         </div>
@@ -184,7 +191,7 @@ export default function DashboardPage() {
           <div style={{ marginBottom: 28 }}>
             <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--text-primary)", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--green)", animation: "pulse-dot 2s ease-in-out infinite" }} />
-              Live Classes
+              {t("dash.live_classes")}
             </h2>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {liveRooms.map(room => (
@@ -193,13 +200,13 @@ export default function DashboardPage() {
                   display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12,
                 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <span className="badge badge-live">Live Now</span>
+                    <span className="badge badge-live">{t("dash.live_now")}</span>
                     <span style={{ fontSize: 14, fontWeight: 500, color: "var(--text-primary)" }}>{room.roomName}</span>
                     <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{room.subject} · {room.teacherName}</span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                     <Link href={`/room/${room.id}/meeting`}>
-                      <button className="btn-success" style={{ padding: "7px 18px", fontSize: 13 }}>Join Class Now →</button>
+                      <button className="btn-success" style={{ padding: "7px 18px", fontSize: 13 }}>{t("dash.join_class_now")}</button>
                     </Link>
                     {isTeacher && (
                       <button
@@ -208,7 +215,7 @@ export default function DashboardPage() {
                         onClick={() => handleTerminateLiveClass(room)}
                         style={{ padding: "7px 18px", fontSize: 13 }}
                       >
-                        {terminatingRoomId === room.id ? "Terminating..." : "Terminate Class"}
+                        {terminatingRoomId === room.id ? t("dash.terminating") : t("dash.terminate_class")}
                       </button>
                     )}
                   </div>
@@ -225,20 +232,20 @@ export default function DashboardPage() {
             {/* At a Glance */}
             <div className="card" style={{ padding: 24 }}>
               <h3 style={{ fontSize: 15, fontWeight: 600, color: "var(--text-primary)", marginBottom: 20 }}>
-                📊 At a Glance
+                {t("dash.at_a_glance")}
               </h3>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                 {/* Active Batches */}
                 <div style={{ padding: 16, borderRadius: "var(--radius-md)", background: "var(--bg-elevated)", border: "1px solid var(--border)" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--green)" }} />
-                    <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-secondary)" }}>Active Batches</span>
+                    <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-secondary)" }}>{t("dash.active_batches")}</span>
                   </div>
                   <p style={{ fontSize: 28, fontWeight: 700, color: "var(--text-primary)" }}>
                     {rooms.filter(r => (r.status || "active") === "active").length}
                   </p>
                   <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
-                    {liveRooms.length} live right now
+                    {liveRooms.length} {t("dash.live_now").toLowerCase()}
                   </p>
                 </div>
 
@@ -246,13 +253,13 @@ export default function DashboardPage() {
                 <div style={{ padding: 16, borderRadius: "var(--radius-md)", background: "var(--bg-elevated)", border: "1px solid var(--border)" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--yellow)" }} />
-                    <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-secondary)" }}>Paused Batches</span>
+                    <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-secondary)" }}>{t("dash.paused_batches")}</span>
                   </div>
                   <p style={{ fontSize: 28, fontWeight: 700, color: "var(--text-primary)" }}>
                     {pausedRooms.length}
                   </p>
                   <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
-                    {pausedRooms.length > 0 ? "Awaiting your action" : "None paused"}
+                    {pausedRooms.length > 0 ? "Awaiting action" : "None paused"}
                   </p>
                 </div>
 
@@ -260,7 +267,7 @@ export default function DashboardPage() {
                 <div style={{ padding: 16, borderRadius: "var(--radius-md)", background: "var(--bg-elevated)", border: "1px solid var(--border)" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--blue)" }} />
-                    <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-secondary)" }}>Upcoming Sessions</span>
+                    <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-secondary)" }}>{t("dash.upcoming_title")}</span>
                   </div>
                   <p style={{ fontSize: 28, fontWeight: 700, color: "var(--text-primary)" }}>
                     {upcomingRooms.length}
@@ -274,7 +281,7 @@ export default function DashboardPage() {
                 <div style={{ padding: 16, borderRadius: "var(--radius-md)", background: "var(--bg-elevated)", border: "1px solid var(--border)" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--purple)" }} />
-                    <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-secondary)" }}>{isTeacher ? "Total Students" : "Completed"}</span>
+                    <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-secondary)" }}>{isTeacher ? t("stats.total_students") : t("stats.completed_sessions")}</span>
                   </div>
                   <p style={{ fontSize: 28, fontWeight: 700, color: "var(--text-primary)" }}>
                     {isTeacher ? totalStudents : completedRooms.length}
@@ -289,18 +296,18 @@ export default function DashboardPage() {
             {/* Recent Batches (top 3 only) */}
             <div className="card" style={{ padding: 24 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-                <h3 style={{ fontSize: 15, fontWeight: 600, color: "var(--text-primary)" }}>📚 Recent Batches</h3>
+                <h3 style={{ fontSize: 15, fontWeight: 600, color: "var(--text-primary)" }}>{t("dash.recent_batches")}</h3>
                 <Link href="/batches" style={{ fontSize: 13, color: "var(--blue)", textDecoration: "none", fontWeight: 500 }}>
-                  View All →
+                  {t("dash.view_all")}
                 </Link>
               </div>
               {loadingRooms ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>{[1, 2, 3].map(i => <div key={i} className="skeleton" style={{ height: 60 }} />)}</div>
               ) : rooms.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "24px 0" }}>
-                  <p style={{ fontSize: 14, color: "var(--text-muted)", marginBottom: 12 }}>No batches yet</p>
+                  <p style={{ fontSize: 14, color: "var(--text-muted)", marginBottom: 12 }}>{t("dash.no_batches")}</p>
                   <button className="btn-primary" onClick={() => isTeacher ? setShowCreateModal(true) : setShowJoinModal(true)} style={{ fontSize: 13 }}>
-                    {isTeacher ? "Create First Batch" : "Join a Batch"}
+                    {isTeacher ? t("dash.create_first_batch") : t("dash.join_batch")}
                   </button>
                 </div>
               ) : (
@@ -332,7 +339,7 @@ export default function DashboardPage() {
                         </div>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-                        {room.isActive && <span className="badge badge-live" style={{ fontSize: 10 }}>Live</span>}
+                        {room.isActive && <span className="badge badge-live" style={{ fontSize: 10 }}>{t("dash.live_now")}</span>}
                         {room.status === "paused" && <span className="badge" style={{ background: "var(--yellow-light)", color: "var(--yellow)", border: "1px solid rgba(234,179,8,0.2)", fontSize: 10 }}>Paused</span>}
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2"><polyline points="9,18 15,12 9,6" /></svg>
                       </div>
@@ -347,24 +354,24 @@ export default function DashboardPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {/* Quick Actions */}
             <div className="card" style={{ padding: 20 }}>
-              <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)", marginBottom: 16 }}>⚡ Quick Actions</h3>
+              <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)", marginBottom: 16 }}>{t("dash.quick_actions")}</h3>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {isTeacher ? (
                   <>
                     <button className="btn-primary" style={{ width: "100%", justifyContent: "flex-start" }} onClick={() => setShowCreateModal(true)}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-                      Create New Batch
+                      {t("actions.create_new_batch")}
                     </button>
                     <Link href="/batches" style={{ textDecoration: "none" }}>
                       <button className="btn-secondary" style={{ width: "100%", justifyContent: "flex-start" }}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" /></svg>
-                        Manage Batches
+                        {t("actions.manage_batches")}
                       </button>
                     </Link>
                     <Link href="/recordings" style={{ textDecoration: "none" }}>
                       <button className="btn-secondary" style={{ width: "100%", justifyContent: "flex-start" }}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17,8 12,3 7,8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
-                        Upload Recording
+                        {t("actions.upload_recording")}
                       </button>
                     </Link>
                   </>
@@ -372,18 +379,18 @@ export default function DashboardPage() {
                   <>
                     <button className="btn-primary" style={{ width: "100%", justifyContent: "flex-start" }} onClick={() => setShowJoinModal(true)}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4" /><polyline points="10,17 15,12 10,7" /><line x1="15" y1="12" x2="3" y2="12" /></svg>
-                      Join with Batch Code
+                      {t("actions.join_with_code")}
                     </button>
                     <Link href="/batches" style={{ textDecoration: "none" }}>
                       <button className="btn-secondary" style={{ width: "100%", justifyContent: "flex-start" }}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" /></svg>
-                        View My Batches
+                        {t("nav.my_batches")}
                       </button>
                     </Link>
                     <Link href="/recordings" style={{ textDecoration: "none" }}>
                       <button className="btn-secondary" style={{ width: "100%", justifyContent: "flex-start" }}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polygon points="10,8 16,12 10,16" /></svg>
-                        Watch Lecture Recordings
+                        {t("actions.watch_recordings")}
                       </button>
                     </Link>
                   </>
@@ -393,9 +400,9 @@ export default function DashboardPage() {
 
             {/* Recent Activity */}
             <div className="card" style={{ padding: 20 }}>
-              <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)", marginBottom: 16 }}>🕐 Recent Activity</h3>
+              <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)", marginBottom: 16 }}>{t("dash.recent_activity")}</h3>
               {rooms.length === 0 ? (
-                <p style={{ fontSize: 13, color: "var(--text-muted)" }}>No recent activity yet</p>
+                <p style={{ fontSize: 13, color: "var(--text-muted)" }}>{t("dash.no_recent_activity")}</p>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {rooms.slice(0, 5).map(room => (
@@ -421,9 +428,9 @@ export default function DashboardPage() {
                 <span style={{ fontSize: 13, fontWeight: 600, color: "var(--blue)" }}>Glorious Amplification</span>
               </div>
               <p style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.6, fontStyle: "italic" }}>
-                &ldquo;Discipline is the bridge between goals and accomplishment.&rdquo;
+                &ldquo;{t("quote.4")}&rdquo;
               </p>
-              <p style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 6 }}>Stay focused. Stay consistent. 🎯</p>
+              <p style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 6 }}>{t("dash.stay_focused")}</p>
             </div>
           </div>
         </div>
@@ -433,16 +440,16 @@ export default function DashboardPage() {
       {showClassPicker && (
         <div className="modal-overlay" onClick={() => setShowClassPicker(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 480 }}>
-            <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 4 }}>{isTeacher ? "Start a live class" : "Join a session"}</h2>
-            <p style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 20 }}>Select a batch to {isTeacher ? "begin teaching" : "join the lecture"}</p>
+            <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 4 }}>{isTeacher ? t("picker.start_live_title") : t("picker.join_live_title")}</h2>
+            <p style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 20 }}>{isTeacher ? t("picker.select_batch_desc") : t("picker.select_join_desc")}</p>
             {rooms.length === 0 ? (
               <div style={{ textAlign: "center", padding: "24px 0" }}>
-                <p style={{ fontSize: 14, color: "var(--text-muted)", marginBottom: 16 }}>No batches found</p>
+                <p style={{ fontSize: 14, color: "var(--text-muted)", marginBottom: 16 }}>{t("picker.no_batches_found")}</p>
                 <button className="btn-primary" onClick={() => {
                   setShowClassPicker(false);
                   if (isTeacher) setShowCreateModal(true);
                   else setShowJoinModal(true);
-                }}>{isTeacher ? "Create Batch" : "Join with Code"}</button>
+                }}>{isTeacher ? t("picker.create_batch") : t("picker.join_code")}</button>
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 320, overflowY: "auto" }}>
@@ -459,7 +466,7 @@ export default function DashboardPage() {
                         </div>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        {room.isActive && <span className="badge badge-live" style={{ fontSize: 10 }}>Live</span>}
+                        {room.isActive && <span className="badge badge-live" style={{ fontSize: 10 }}>{t("dash.live_now")}</span>}
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2"><polyline points="9,18 15,12 9,6" /></svg>
                       </div>
                     </div>
@@ -468,7 +475,7 @@ export default function DashboardPage() {
               </div>
             )}
             <div style={{ marginTop: 16, display: "flex", justifyContent: "flex-end" }}>
-              <button className="btn-secondary" onClick={() => setShowClassPicker(false)} style={{ fontSize: 13 }}>Cancel</button>
+              <button className="btn-secondary" onClick={() => setShowClassPicker(false)} style={{ fontSize: 13 }}>{t("picker.cancel")}</button>
             </div>
           </div>
         </div>

@@ -4,6 +4,7 @@ import { ReactNode, useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 import Sidebar from "@/components/Sidebar";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -15,39 +16,41 @@ export default function DashboardLayout({ children, title, wide }: DashboardLayo
   const { userData } = useAuth();
   const { theme, isDark } = useTheme();
   
+  const { t } = useLanguage();
+  
   // Motivational Quotes Pool
   const MOTIVATIONAL_QUOTES = [
-    "🌟 Believe you can and you're halfway there. Keep pushing!",
-    "🎯 Consistency beats talent. Stay consistent with your lectures!",
-    "📚 Every mistake is progress in disguise. Keep learning!",
-    "💪 Discipline is the bridge between goals and accomplishment.",
-    "🚀 Your limitations are only in your imagination. Reach for the stars!",
-    "🌱 Growth begins at the end of your comfort zone. Keep evolving.",
-    "🧘 Mindset is everything. Positive thoughts yield positive results.",
-    "💫 You are capable of amazing things. Believe in your potential.",
-    "🏆 Hard work beats talent when talent doesn't work hard.",
-    "🌞 Each day is a new opportunity to improve. Make today count!",
-    "🔑 Success is the sum of small efforts, repeated day in and day out.",
-    "🌈 Difficult roads often lead to beautiful destinations. Stay strong!",
-    "💭 Dream big, work hard, and make it happen.",
-    "🛡️ Your passion is your greatest asset. Let it guide you to success.",
-    "⏳ Don't wait for opportunity. Create it.",
-    "🌠 The future belongs to those who believe in the beauty of their dreams.",
-    "💡 The only limit to our realization of tomorrow will be our doubts of today.",
-    "🎨 Every morning we are born again. What we do today is what matters most.",
-    "🏔️ Climb the mountain not to show the world, but so you can see the world.",
-    "🌻 Believe in yourself, take on your challenges, and conquer your fears."
+    "quote.1",
+    "quote.2",
+    "quote.3",
+    "quote.4",
+    "quote.5",
+    "quote.6",
+    "quote.7",
+    "quote.8",
+    "quote.9",
+    "quote.10",
+    "quote.11",
+    "quote.12",
+    "quote.13",
+    "quote.14",
+    "quote.15",
+    "quote.16",
+    "quote.17",
+    "quote.18",
+    "quote.19",
+    "quote.20"
   ];
 
   const getRelativeTime = (timestamp: number): string => {
     const diff = Date.now() - timestamp;
-    if (diff < 60000) return "Just now";
+    if (diff < 60000) return t("topbar.just_now");
     const mins = Math.floor(diff / 60000);
-    if (mins < 60) return `${mins}m ago`;
+    if (mins < 60) return t("topbar.mins_ago", { mins });
     const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}h ago`;
+    if (hours < 24) return t("topbar.hours_ago", { hours });
     const days = Math.floor(hours / 24);
-    return `${days}d ago`;
+    return t("topbar.days_ago", { days });
   };
 
   // Motivational Notifications State
@@ -122,7 +125,7 @@ export default function DashboardLayout({ children, title, wide }: DashboardLayo
             {/* Search */}
             <div className="topbar-search">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <input type="text" placeholder="Search batches, lectures..." />
+              <input type="text" placeholder={t("topbar.search_placeholder")} />
             </div>
 
             {/* Notification bell */}
@@ -153,7 +156,7 @@ export default function DashboardLayout({ children, title, wide }: DashboardLayo
                 }}>
                   {/* Dropdown Header */}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", borderBottom: "1px solid var(--border)", background: "var(--bg-elevated)" }}>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>Alert Center 🔔</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{t("topbar.alert_center")}</span>
                     {notifications.some(n => !n.read) && (
                       <button
                         onClick={() => {
@@ -163,7 +166,7 @@ export default function DashboardLayout({ children, title, wide }: DashboardLayo
                         }}
                         style={{ border: "none", background: "none", color: "var(--blue)", fontSize: 11, cursor: "pointer", fontWeight: 500 }}
                       >
-                        Mark all read
+                        {t("topbar.mark_all_read")}
                       </button>
                     )}
                   </div>
@@ -172,7 +175,7 @@ export default function DashboardLayout({ children, title, wide }: DashboardLayo
                   <div style={{ maxHeight: 280, overflowY: "auto", display: "flex", flexDirection: "column" }}>
                     {notifications.length === 0 ? (
                       <div style={{ padding: 24, textAlign: "center", color: "var(--text-muted)", fontSize: 13 }}>
-                        No notifications. Stay tuned!
+                        {t("topbar.no_notifications")}
                       </div>
                     ) : (
                       notifications.map(n => (
@@ -190,7 +193,7 @@ export default function DashboardLayout({ children, title, wide }: DashboardLayo
                           }}
                         >
                           <p style={{ fontSize: 12.5, color: "var(--text-primary)", lineHeight: 1.5, marginBottom: 4, textAlign: "left" }}>
-                            {n.text}
+                            {t(n.text)}
                           </p>
                           <p style={{ fontSize: 10, color: "var(--text-muted)", textAlign: "left", margin: 0 }}>{getRelativeTime(n.createdAt)}</p>
                         </div>
@@ -205,7 +208,7 @@ export default function DashboardLayout({ children, title, wide }: DashboardLayo
                       onClick={() => setShowNotifDropdown(false)}
                       style={{ padding: "4px 12px", fontSize: 11, width: "100%" }}
                     >
-                      Close Notifications
+                      {t("topbar.close_notifications")}
                     </button>
                   </div>
                 </div>
