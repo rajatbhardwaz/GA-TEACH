@@ -60,7 +60,7 @@ export default function CreateRoomModal({ isOpen, onClose, onRoomCreated }: Crea
         isActive: false,
         isPaid,
         price: isPaid ? Number(price) : 0,
-        upiId: isPaid ? upiId : "",
+        upiId: isPaid ? (upiId.trim() || "admin.gloriousamplification@okaxis") : "",
       });
 
       setRoomName("");
@@ -185,13 +185,12 @@ export default function CreateRoomModal({ isOpen, onClose, onRoomCreated }: Crea
                 />
               </div>
               <div>
-                <label className="field-label">Direct UPI ID for Payments</label>
+                <label className="field-label">Direct UPI ID for Payments (optional)</label>
                 <input
                   type="text"
                   value={upiId}
                   onChange={(e) => setUpiId(e.target.value)}
-                  required={isPaid}
-                  placeholder="e.g. teacher@upi"
+                  placeholder="Leave blank to use default (admin.gloriousamplification@okaxis)"
                   className="input-field"
                 />
               </div>

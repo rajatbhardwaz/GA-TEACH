@@ -334,7 +334,7 @@ export default function EnrollPage() {
                             onClick={() => setSelectedRoomForPayment(room)}
                             style={{ width: "100%", justifyContent: "center" }}
                           >
-                            Proceed to Payment
+                            Pay Fees
                           </button>
                         ) : payReq.status === "pending" ? (
                           /* Paid batch: Payment verification pending */
