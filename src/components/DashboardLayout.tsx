@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 import Sidebar from "@/components/Sidebar";
@@ -13,7 +13,96 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children, title, wide }: DashboardLayoutProps) {
   const { userData } = useAuth();
-  const { theme, toggleTheme, isDark } = useTheme();
+  const { theme, isDark } = useTheme();
+  
+  // Motivational Quotes Pool
+  const MOTIVATIONAL_QUOTES = [
+    "🌟 Believe you can and you're halfway there. Keep pushing!",
+    "🎯 Consistency beats talent. Stay consistent with your lectures!",
+    "📚 Every mistake is progress in disguise. Keep learning!",
+    "💪 Discipline is the bridge between goals and accomplishment.",
+    "🚀 Your limitations are only in your imagination. Reach for the stars!",
+    "🌱 Growth begins at the end of your comfort zone. Keep evolving.",
+    "🧘 Mindset is everything. Positive thoughts yield positive results.",
+    "💫 You are capable of amazing things. Believe in your potential.",
+    "🏆 Hard work beats talent when talent doesn't work hard.",
+    "🌞 Each day is a new opportunity to improve. Make today count!",
+    "🔑 Success is the sum of small efforts, repeated day in and day out.",
+    "🌈 Difficult roads often lead to beautiful destinations. Stay strong!",
+    "💭 Dream big, work hard, and make it happen.",
+    "🛡️ Your passion is your greatest asset. Let it guide you to success.",
+    "⏳ Don't wait for opportunity. Create it.",
+    "🌠 The future belongs to those who believe in the beauty of their dreams.",
+    "💡 The only limit to our realization of tomorrow will be our doubts of today.",
+    "🎨 Every morning we are born again. What we do today is what matters most.",
+    "🏔️ Climb the mountain not to show the world, but so you can see the world.",
+    "🌻 Believe in yourself, take on your challenges, and conquer your fears."
+  ];
+
+  const getRelativeTime = (timestamp: number): string => {
+    const diff = Date.now() - timestamp;
+    if (diff < 60000) return "Just now";
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+  };
+
+  // Motivational Notifications State
+  const [notifications, setNotifications] = useState<{ id: string; text: string; createdAt: number; read: boolean }[]>([]);
+  const [showNotifDropdown, setShowNotifDropdown] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("ga-motivational-notifications");
+    let initialNotifs = [];
+
+    if (saved) {
+      try {
+        initialNotifs = JSON.parse(saved);
+      } catch (e) {
+        console.error("Failed to parse notifications", e);
+      }
+    }
+
+    if (initialNotifs.length === 0) {
+      const shuffled = [...MOTIVATIONAL_QUOTES].sort(() => 0.5 - Math.random());
+      const now = Date.now();
+      initialNotifs = [
+        { id: "1", text: shuffled[0], createdAt: now, read: false },
+        { id: "2", text: shuffled[1], createdAt: now - 30 * 60 * 1000, read: false },
+        { id: "3", text: shuffled[2], createdAt: now - 2 * 3600 * 1000, read: true },
+        { id: "4", text: shuffled[3], createdAt: now - 5 * 3600 * 1000, read: true },
+        { id: "5", text: shuffled[4], createdAt: now - 24 * 3600 * 1000, read: true },
+      ];
+      localStorage.setItem("ga-motivational-notifications", JSON.stringify(initialNotifs));
+    }
+    setNotifications(initialNotifs);
+
+    // Setup interval to periodically add a new random motivational quote every 2 minutes
+    const interval = setInterval(() => {
+      setNotifications(prev => {
+        const activeTexts = prev.map(n => n.text);
+        const availableQuotes = MOTIVATIONAL_QUOTES.filter(q => !activeTexts.includes(q));
+        const quotePool = availableQuotes.length > 0 ? availableQuotes : MOTIVATIONAL_QUOTES;
+        const randomQuote = quotePool[Math.floor(Math.random() * quotePool.length)];
+
+        const newNotif = {
+          id: Math.random().toString(36).substring(2, 9),
+          text: randomQuote,
+          createdAt: Date.now(),
+          read: false
+        };
+
+        const updated = [newNotif, ...prev].slice(0, 15);
+        localStorage.setItem("ga-motivational-notifications", JSON.stringify(updated));
+        return updated;
+      });
+    }, 120000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="app-layout">
@@ -36,38 +125,92 @@ export default function DashboardLayout({ children, title, wide }: DashboardLayo
               <input type="text" placeholder="Search batches, lectures..." />
             </div>
 
-            {/* Theme toggle */}
-            <button
-              onClick={toggleTheme}
-              className="theme-toggle-btn"
-              aria-label={`Switch to ${isDark ? "light" : "dark"} mode`}
-              title={`Switch to ${isDark ? "light" : "dark"} mode`}
-            >
-              <div className={`theme-toggle-track ${theme}`}>
-                <div className="theme-toggle-thumb">
-                  {isDark ? (
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
-                    </svg>
-                  ) : (
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="5"/>
-                      <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
-                      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-                      <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
-                      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-                    </svg>
-                  )}
-                </div>
-              </div>
-            </button>
-
             {/* Notification bell */}
-            <button className="btn-icon" style={{ border: "none" }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
-              </svg>
-            </button>
+            <div style={{ position: "relative" }}>
+              <button
+                className="btn-icon"
+                onClick={() => setShowNotifDropdown(!showNotifDropdown)}
+                style={{ border: "none", position: "relative", cursor: "pointer", background: "none" }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
+                </svg>
+                {notifications.filter(n => !n.read).length > 0 && (
+                  <span style={{
+                    position: "absolute", top: 2, right: 2, width: 8, height: 8,
+                    borderRadius: "50%", background: "var(--red)",
+                    border: "2px solid var(--bg-card)"
+                  }} />
+                )}
+              </button>
+
+              {showNotifDropdown && (
+                <div style={{
+                  position: "absolute", top: 38, right: 0, width: 320,
+                  background: "var(--bg-card)", border: "1px solid var(--border)",
+                  borderRadius: "var(--radius-lg)", boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
+                  zIndex: 100, overflow: "hidden"
+                }}>
+                  {/* Dropdown Header */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", borderBottom: "1px solid var(--border)", background: "var(--bg-elevated)" }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>Alert Center 🔔</span>
+                    {notifications.some(n => !n.read) && (
+                      <button
+                        onClick={() => {
+                          const updated = notifications.map(n => ({ ...n, read: true }));
+                          setNotifications(updated);
+                          localStorage.setItem("ga-motivational-notifications", JSON.stringify(updated));
+                        }}
+                        style={{ border: "none", background: "none", color: "var(--blue)", fontSize: 11, cursor: "pointer", fontWeight: 500 }}
+                      >
+                        Mark all read
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Dropdown List */}
+                  <div style={{ maxHeight: 280, overflowY: "auto", display: "flex", flexDirection: "column" }}>
+                    {notifications.length === 0 ? (
+                      <div style={{ padding: 24, textAlign: "center", color: "var(--text-muted)", fontSize: 13 }}>
+                        No notifications. Stay tuned!
+                      </div>
+                    ) : (
+                      notifications.map(n => (
+                        <div
+                          key={n.id}
+                          onClick={() => {
+                            const updated = notifications.map(item => item.id === n.id ? { ...item, read: true } : item);
+                            setNotifications(updated);
+                            localStorage.setItem("ga-motivational-notifications", JSON.stringify(updated));
+                          }}
+                          style={{
+                            padding: "12px 16px", borderBottom: "1px solid var(--border)",
+                            background: n.read ? "transparent" : "var(--blue-light)",
+                            cursor: "pointer", transition: "background 0.2s ease"
+                          }}
+                        >
+                          <p style={{ fontSize: 12.5, color: "var(--text-primary)", lineHeight: 1.5, marginBottom: 4, textAlign: "left" }}>
+                            {n.text}
+                          </p>
+                          <p style={{ fontSize: 10, color: "var(--text-muted)", textAlign: "left", margin: 0 }}>{getRelativeTime(n.createdAt)}</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  
+                  {/* Dropdown Footer */}
+                  <div style={{ padding: 10, borderTop: "1px solid var(--border)", background: "var(--bg-elevated)", textAlign: "center" }}>
+                    <button
+                      className="btn-secondary"
+                      onClick={() => setShowNotifDropdown(false)}
+                      style={{ padding: "4px 12px", fontSize: 11, width: "100%" }}
+                    >
+                      Close Notifications
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* User pill */}
             {userData && (
