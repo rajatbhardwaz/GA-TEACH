@@ -146,7 +146,7 @@ export default function SignupPage() {
           <Link href="/" style={{ display: "inline-block", marginBottom: 32 }}>
             <img src="/logo.png" alt="Logo" style={{ width: 48, height: 48, objectFit: "contain" }} />
           </Link>
-          <h1 style={{ fontSize: "clamp(36px, 5vw, 48px)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: 24 }}>
+          <h1 className="text-gradient">
             <span className="text-gradient">Start your</span><br />
             <span style={{ background: "linear-gradient(135deg, var(--green), var(--blue))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Glorious Journey.</span>
           </h1>
@@ -166,7 +166,7 @@ export default function SignupPage() {
               <img src="/logo.png" alt="Glorious Amplification" style={{ width: 40, height: 40, objectFit: "contain" }} />
               <span style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.01em" }}>Glorious Amplification</span>
             </div>
-          <h1 style={{ fontSize: 22, fontWeight: 600, textAlign: "center", marginBottom: 4, color: "var(--text-primary)" }}>Begin your journey</h1>
+          <h1 className="text-gradient">Begin your journey</h1>
           <p style={{ fontSize: 14, textAlign: "center", color: "var(--text-secondary)", marginBottom: 28 }}>Register as a student or faculty member</p>
           {error && <div className="error-alert">{error}</div>}
 

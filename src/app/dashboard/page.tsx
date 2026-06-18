@@ -176,7 +176,7 @@ export default function DashboardPage() {
         {/* Greeting + Actions */}
         <div className="dash-header" style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 48, gap: 16, flexWrap: "wrap", position: "relative", zIndex: 10 }}>
           <div>
-            <h1 style={{ fontSize: "clamp(32px, 5vw, 42px)", fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 8, lineHeight: 1.1 }}>
+            <h1 className="text-gradient" style={{ fontSize: "clamp(32px, 5vw, 42px)", fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 8, lineHeight: 1.1 }}>
               <span className="text-gradient">{t(getGreetingKey())},</span><br />
               <span className="text-gradient-blue">{userData.name.split(" ")[0]} {getGreetingEmoji()}</span>
             </h1>

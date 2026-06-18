@@ -30,7 +30,11 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <LanguageProvider>
-              <SplashWrapper>{children}</SplashWrapper>
+              <SplashWrapper>
+                <div className="page-enter page-content">
+                  {children}
+                </div>
+              </SplashWrapper>
             </LanguageProvider>
           </AuthProvider>
         </ThemeProvider>

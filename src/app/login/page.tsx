@@ -193,7 +193,7 @@ export default function LoginPage() {
           {/* ─── MAIN LOGIN VIEW ─── */}
           {view === "main" && (
             <>
-              <h1 style={{ fontSize: 22, fontWeight: 600, textAlign: "center", marginBottom: 4, color: "var(--text-primary)" }}>Welcome back, aspirant</h1>
+              <h1 className="text-gradient">Welcome back, aspirant</h1>
               <p style={{ fontSize: 14, textAlign: "center", color: "var(--text-secondary)", marginBottom: 28 }}>Sign in to continue your preparation</p>
               {error && <div className="error-alert">{error}</div>}
 
@@ -235,7 +235,7 @@ export default function LoginPage() {
               <button onClick={() => { setView("main"); setError(""); setOtpSent(false); setOtp(["","","","","",""]); setPhoneNumber(""); }} style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 13, marginBottom: 20, padding: 0 }}>
                 <BackArrow /> Back to login
               </button>
-              <h1 style={{ fontSize: 22, fontWeight: 600, textAlign: "center", marginBottom: 4, color: "var(--text-primary)" }}>Phone Sign In</h1>
+              <h1 className="text-gradient">Phone Sign In</h1>
               <p style={{ fontSize: 14, textAlign: "center", color: "var(--text-secondary)", marginBottom: 28 }}>
                 {otpSent ? "Enter the 6-digit code sent to your phone" : "We'll send you a one-time verification code"}
               </p>

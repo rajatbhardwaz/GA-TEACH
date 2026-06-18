@@ -243,7 +243,7 @@ export default function AttendancePage() {
       <div className="page-enter">
         {/* Header */}
         <div style={{ marginBottom: 48, position: "relative", zIndex: 10 }}>
-          <h1 style={{ fontSize: "clamp(24px, 4vw, 32px)", fontWeight: 800, letterSpacing: "-0.02em", marginBottom: 6 }}>
+          <h1 className="text-gradient" style={{ fontSize: "clamp(24px, 4vw, 32px)", fontWeight: 800, letterSpacing: "-0.02em", marginBottom: 6 }}>
             <span className="text-gradient">{t("attend.title")} 📋</span>
           </h1>
           <p style={{ fontSize: 15, color: "var(--text-secondary)", fontWeight: 500 }}>
