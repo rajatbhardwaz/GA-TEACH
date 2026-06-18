@@ -310,6 +310,7 @@ export default function SignupPage() {
             <GoogleIcon />
             Sign up with Google
           </button>
+          </div>
         </div>
 
         <p style={{ fontSize: 14, textAlign: "center", marginTop: 20, color: "var(--text-secondary)" }}>

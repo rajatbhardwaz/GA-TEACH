@@ -150,7 +150,7 @@ export default function UploadRecordingModal({
     ]);
 
     const data = await ffmpeg.readFile("output.mp4") as Uint8Array;
-    const compressedBlob = new Blob([data], { type: "video/mp4" });
+    const compressedBlob = new Blob([data as any], { type: "video/mp4" });
     setCompressedSize(compressedBlob.size);
     setCompressionProgress(100);
 
