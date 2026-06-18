@@ -1354,9 +1354,20 @@ a:hover {
 
 /* Prevent horizontal scroll globally */
 html,
-body {
+body,
+#__next,
+.app-layout,
+.main-content,
+.page-content,
+.page-content-wide {
   overflow-x: hidden;
   max-width: 100vw;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 /* ---- Tablets and below (≤1024px) ---- */
@@ -1777,12 +1788,18 @@ body {
   .page-content,
   .page-content-wide {
     padding: 20px 16px 28px;
+    width: 100%;
+    max-width: 100vw;
   }
 
   /* Stats → single column */
   .stats-grid {
     grid-template-columns: 1fr !important;
     gap: 10px !important;
+  }
+
+  .recordings-grid {
+    grid-template-columns: 1fr !important;
   }
 
   /* Typography scale down */
